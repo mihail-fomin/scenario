@@ -25,19 +25,28 @@ export class UIManager implements UIManagerInterface {
   }
   
   private setupEventListeners(): void {
-    this.elements.startBtn.addEventListener('click', () => {
+    // Добавляем поддержку touch событий для мобильных устройств
+    const addTouchSupport = (element: HTMLElement, callback: () => void) => {
+      element.addEventListener('click', callback);
+      element.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        callback();
+      });
+    };
+
+    addTouchSupport(this.elements.startBtn, () => {
       if (this.callbacks.onStart) {
         this.callbacks.onStart();
       }
     });
     
-    this.elements.pauseBtn.addEventListener('click', () => {
+    addTouchSupport(this.elements.pauseBtn, () => {
       if (this.callbacks.onPause) {
         this.callbacks.onPause();
       }
     });
     
-    this.elements.nextBtn.addEventListener('click', () => {
+    addTouchSupport(this.elements.nextBtn, () => {
       if (this.callbacks.onNext) {
         this.callbacks.onNext();
       }
@@ -122,11 +131,17 @@ export class UIManager implements UIManagerInterface {
         <div class="dialogue-card-description">${dialogueSet.description}</div>
       `;
       
-      // Добавляем обработчик клика
-      card.addEventListener('click', () => {
+      // Добавляем обработчики клика и touch для мобильных устройств
+      const handleCardClick = () => {
         if (this.callbacks.onDialogueSetChange) {
           this.callbacks.onDialogueSetChange(dialogueSet.id);
         }
+      };
+
+      card.addEventListener('click', handleCardClick);
+      card.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        handleCardClick();
       });
       
       this.elements.dialogueSelector.appendChild(card);
