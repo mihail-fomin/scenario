@@ -14,9 +14,9 @@
 
 ## Технологии
 
+- **TypeScript** - типизированный JavaScript
 - **Vite** - быстрый сборщик
 - **Three.js** - 3D графика
-- **Vanilla JavaScript** - без фреймворков
 - **Web Speech API** - text-to-speech
 - **ES6 Modules** - модульная архитектура
 
@@ -33,6 +33,13 @@ npm run dev
 ```
 
 3. Откройте браузер по адресу `http://localhost:3000`
+
+## Разработка
+
+Для проверки типов TypeScript:
+```bash
+npm run type-check
+```
 
 ## Управление
 

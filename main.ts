@@ -4,9 +4,12 @@ import { App } from './src/js/App.js';
 const app = new App();
 
 // Добавление рендерера в DOM
-document.getElementById('canvas-container').appendChild(app.sceneManager.getRenderer().domElement);
+const canvasContainer = document.getElementById('canvas-container');
+if (canvasContainer) {
+  canvasContainer.appendChild(app.getSceneManager().getRenderer().domElement);
+}
 
 // Обработка закрытия страницы
 window.addEventListener('beforeunload', () => {
-    app.dispose();
+  app.dispose();
 });
