@@ -161,11 +161,15 @@ export class Character implements CharacterInterface {
   }
   
   public update(_deltaTime: number): void {
+    // Поворот персонажа к центру круга (0, 0, 0)
+    const centerX = 0;
+    const centerZ = 0;
+    const angle = Math.atan2(centerX - this.position[0], centerZ - this.position[2]);
+    this.group.rotation.y = angle;
+    
     if (this.isSpeaking) {
       // Легкое покачивание при разговоре
-      this.group.rotation.y = Math.sin(Date.now() * 0.005) * 0.1;
-    } else {
-      this.group.rotation.y = 0;
+      this.group.rotation.y += Math.sin(Date.now() * 0.005) * 0.1;
     }
     
     // Легкое дыхание

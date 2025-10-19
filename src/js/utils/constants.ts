@@ -1,10 +1,10 @@
 import { CharacterData, AnimationSettings, CameraSettings, TTSSettings } from '@/types/index';
 
-// Константы персонажей
+// Константы персонажей - расположены в кругу
 export const CHARACTER_DATA: CharacterData[] = [
-  { name: 'Лёха', color: 0x4CAF50, position: [-3, 0, 0] },
-  { name: 'Федот', color: 0x2196F3, position: [0, 0, 0] },
-  { name: 'Тихон', color: 0xFF9800, position: [3, 0, 0] }
+  { name: 'Лёха', color: 0x4CAF50, position: [0, 0, -3] },      // Спереди
+  { name: 'Федот', color: 0x2196F3, position: [-2.6, 0, 1.5] }, // Слева-сзади
+  { name: 'Тихон', color: 0xFF9800, position: [2.6, 0, 1.5] }   // Справа-сзади
 ];
 
 // Настройки анимации
