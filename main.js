@@ -7,6 +7,7 @@ let isPlaying = false;
 let isPaused = false;
 let isSpeaking = false;
 let speechTimeout = null;
+let nameLabels = [];
 
 // Элементы UI
 const startBtn = document.getElementById('startBtn');
@@ -124,6 +125,68 @@ function init() {
     animate();
 }
 
+// Обновление подсветки имени персонажа
+function updateNameLabelHighlight(character) {
+    // Сброс всех меток к обычному виду
+    characters.forEach(char => {
+        if (char.nameLabel) {
+            char.nameLabel.scale.set(1, 1, 1);
+            char.nameLabel.material.opacity = 0.8;
+        }
+    });
+    
+    // Подсветка текущего говорящего
+    if (character.nameLabel) {
+        character.nameLabel.scale.set(1.2, 1.2, 1.2);
+        character.nameLabel.material.opacity = 1.0;
+    }
+}
+
+// Создание текстовой метки с именем персонажа
+function createNameLabel(name, position) {
+    // Создание canvas для текста
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = 256;
+    canvas.height = 64;
+    
+    // Настройка стиля текста
+    context.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Добавляем рамку
+    context.strokeStyle = 'white';
+    context.lineWidth = 2;
+    context.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+    
+    context.fillStyle = 'white';
+    context.font = 'bold 24px Arial';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(name, canvas.width / 2, canvas.height / 2);
+    
+    // Создание текстуры из canvas
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    
+    // Создание материала
+    const material = new THREE.MeshBasicMaterial({ 
+        map: texture, 
+        transparent: true,
+        alphaTest: 0.1,
+        opacity: 0.8
+    });
+    
+    // Создание геометрии для метки
+    const geometry = new THREE.PlaneGeometry(2, 0.5);
+    const label = new THREE.Mesh(geometry, material);
+    
+    // Позиционирование метки над персонажем
+    label.position.set(position[0], position[1] + 2.5, position[2]);
+    
+    return label;
+}
+
 // Создание персонажей
 function createCharacters() {
     characterData.forEach((data, index) => {
@@ -191,6 +254,11 @@ function createCharacters() {
         // Позиционирование персонажа
         characterGroup.position.set(data.position[0], data.position[1], data.position[2]);
         
+        // Создание метки с именем
+        const nameLabel = createNameLabel(data.name, data.position);
+        scene.add(nameLabel);
+        nameLabels.push(nameLabel);
+        
         // Добавление в сцену
         scene.add(characterGroup);
         
@@ -199,7 +267,8 @@ function createCharacters() {
             group: characterGroup,
             name: data.name,
             color: data.color,
-            isSpeaking: false
+            isSpeaking: false,
+            nameLabel: nameLabel
         });
     });
 }
@@ -305,11 +374,18 @@ function playCurrentDialogue() {
     characters.forEach(char => {
         char.isSpeaking = false;
         char.group.scale.set(1, 1, 1);
+        if (char.nameLabel) {
+            char.nameLabel.scale.set(1, 1, 1);
+            char.nameLabel.material.opacity = 0.8;
+        }
     });
     
     // Активация текущего говорящего
     character.isSpeaking = true;
     character.group.scale.set(1.1, 1.1, 1.1);
+    
+    // Подсветка имени говорящего персонажа
+    updateNameLabelHighlight(character);
     
     // Обновление UI
     currentSpeaker.textContent = character.name;
@@ -430,6 +506,10 @@ function endDialogue() {
     characters.forEach(char => {
         char.isSpeaking = false;
         char.group.scale.set(1, 1, 1);
+        if (char.nameLabel) {
+            char.nameLabel.scale.set(1, 1, 1);
+            char.nameLabel.material.opacity = 0.8;
+        }
     });
     
     currentSpeaker.textContent = 'Готов к диалогу';
@@ -463,6 +543,11 @@ function animate() {
         if (!character.isSpeaking) {
             character.group.scale.y = breatheScale;
         }
+    });
+    
+    // Обновление меток с именами - всегда смотрят на камеру
+    nameLabels.forEach(label => {
+        label.lookAt(camera.position);
     });
     
     // Вращение камеры вокруг сцены
