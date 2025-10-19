@@ -5,6 +5,8 @@ let scene, camera, renderer, characters = [];
 let currentDialogueIndex = 0;
 let isPlaying = false;
 let isPaused = false;
+let isSpeaking = false;
+let speechTimeout = null;
 
 // Элементы UI
 const startBtn = document.getElementById('startBtn');
@@ -293,6 +295,12 @@ function playCurrentDialogue() {
     const dialogue = dialogues[currentDialogueIndex];
     const character = characters[dialogue.position];
     
+    // Очистка предыдущего таймера
+    if (speechTimeout) {
+        clearTimeout(speechTimeout);
+        speechTimeout = null;
+    }
+    
     // Остановка предыдущего говорящего
     characters.forEach(char => {
         char.isSpeaking = false;
@@ -313,9 +321,9 @@ function playCurrentDialogue() {
     // Text-to-Speech
     speakText(dialogue.text);
     
-    // Автоматический переход к следующей реплике через 3 секунды
-    setTimeout(() => {
-        if (isPlaying && !isPaused) {
+    // Резервный таймер на случай, если TTS не сработает
+    speechTimeout = setTimeout(() => {
+        if (isPlaying && !isPaused && !isSpeaking) {
             nextDialogue();
         }
     }, 3000);
@@ -340,27 +348,51 @@ function speakText(text) {
         
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'ru-RU';
-        utterance.rate = 0.9;
+        utterance.rate = 1.0;
         utterance.pitch = 1;
         utterance.volume = 0.8;
         
         utterance.onstart = () => {
             console.log('Начало воспроизведения речи');
+            isSpeaking = true;
+            // Очищаем резервный таймер, так как TTS работает
+            if (speechTimeout) {
+                clearTimeout(speechTimeout);
+                speechTimeout = null;
+            }
         };
         
         utterance.onend = () => {
             console.log('Конец воспроизведения речи');
+            isSpeaking = false;
             if (isPlaying && !isPaused) {
-                // Автоматический переход к следующей реплике
+                // Автоматический переход к следующей реплике через 1.5 секунды после окончания речи
                 setTimeout(() => {
                     nextDialogue();
                 }, 500);
             }
         };
         
+        utterance.onerror = (event) => {
+            console.log('Ошибка воспроизведения речи:', event.error);
+            isSpeaking = false;
+            // Если TTS не работает, используем резервный таймер
+            if (isPlaying && !isPaused) {
+                speechTimeout = setTimeout(() => {
+                    nextDialogue();
+                }, 3000);
+            }
+        };
+        
         speechSynthesis.speak(utterance);
     } else {
         console.log('Text-to-Speech не поддерживается');
+        // Если TTS не поддерживается, используем резервный таймер
+        if (isPlaying && !isPaused) {
+            speechTimeout = setTimeout(() => {
+                nextDialogue();
+            }, 4000);
+        }
     }
 }
 
@@ -369,6 +401,11 @@ function stopSpeaking() {
     if ('speechSynthesis' in window) {
         speechSynthesis.cancel();
     }
+    isSpeaking = false;
+    if (speechTimeout) {
+        clearTimeout(speechTimeout);
+        speechTimeout = null;
+    }
     hideSubtitles();
 }
 
@@ -376,6 +413,13 @@ function stopSpeaking() {
 function endDialogue() {
     isPlaying = false;
     isPaused = false;
+    isSpeaking = false;
+    
+    // Очистка таймеров
+    if (speechTimeout) {
+        clearTimeout(speechTimeout);
+        speechTimeout = null;
+    }
     
     startBtn.disabled = false;
     pauseBtn.disabled = true;
