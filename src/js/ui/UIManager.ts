@@ -5,7 +5,6 @@ export class UIManager implements UIManagerInterface {
   private callbacks: UICallbacks = {
     onStart: undefined,
     onPause: undefined,
-    onNext: undefined,
     onDialogueSetChange: undefined
   };
   
@@ -13,7 +12,6 @@ export class UIManager implements UIManagerInterface {
     this.elements = {
       startBtn: document.getElementById('startBtn') as HTMLButtonElement,
       pauseBtn: document.getElementById('pauseBtn') as HTMLButtonElement,
-      nextBtn: document.getElementById('nextBtn') as HTMLButtonElement,
       subtitles: document.getElementById('subtitles') as HTMLElement,
       currentSpeaker: document.getElementById('currentSpeaker') as HTMLElement,
       currentStatus: document.getElementById('currentStatus') as HTMLElement,
@@ -46,11 +44,6 @@ export class UIManager implements UIManagerInterface {
       }
     });
     
-    addTouchSupport(this.elements.nextBtn, () => {
-      if (this.callbacks.onNext) {
-        this.callbacks.onNext();
-      }
-    });
 
     // Обработчик для карточек диалогов будет добавлен в updateDialogueSelector
   }
@@ -80,7 +73,6 @@ export class UIManager implements UIManagerInterface {
   public setPlayingState(isPlaying: boolean, isPaused: boolean): void {
     this.elements.startBtn.disabled = isPlaying;
     this.elements.pauseBtn.disabled = !isPlaying;
-    this.elements.nextBtn.disabled = !isPlaying;
     
     if (isPaused) {
       this.elements.pauseBtn.textContent = 'Продолжить';
@@ -92,7 +84,6 @@ export class UIManager implements UIManagerInterface {
   public setReadyState(): void {
     this.elements.startBtn.disabled = false;
     this.elements.pauseBtn.disabled = true;
-    this.elements.nextBtn.disabled = true;
     this.elements.pauseBtn.textContent = 'Пауза';
     this.updateSpeakerInfo('Готов к диалогу', 'Нажмите "Начать диалог"');
   }

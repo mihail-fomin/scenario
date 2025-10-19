@@ -169,7 +169,6 @@ export class App {
     this.uiManager.setCallbacks({
       onStart: () => this.startDialogue(),
       onPause: () => this.pauseDialogue(),
-      onNext: () => this.nextDialogue(),
       onDialogueSetChange: (dialogueSetId: string) => this.changeDialogueSet(dialogueSetId)
     });
 

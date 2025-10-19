@@ -265,7 +265,7 @@
             }
 
             #dialogue-selector {
-                top: 80px;
+                top: 60px;
                 left: 10px;
                 right: 10px;
                 transform: none;
@@ -295,43 +295,29 @@
             }
 
             #dialogue-info {
-                top: 180px;
-                left: 10px;
-                right: 10px;
-                transform: none;
-                max-width: none;
-                padding: 12px;
-                background: rgba(0, 0, 0, 0.8);
-                backdrop-filter: blur(3px);
-                -webkit-backdrop-filter: blur(3px);
-            }
-
-            .dialogue-title {
-                font-size: 16px;
-                margin-bottom: 8px;
-            }
-
-            .dialogue-description {
-                font-size: 13px;
+                display: none;
             }
 
             #character-info {
-                top: 250px;
-                left: 10px;
+                top: 10px;
                 right: 10px;
-                padding: 12px;
-                background: rgba(0, 0, 0, 0.8);
+                left: auto;
+                width: auto;
+                max-width: 200px;
+                padding: 8px 12px;
+                background: rgba(0, 0, 0, 0.7);
                 backdrop-filter: blur(3px);
                 -webkit-backdrop-filter: blur(3px);
+                border-radius: 6px;
             }
 
             .character-name {
-                font-size: 16px;
-                margin-bottom: 8px;
+                font-size: 14px;
+                margin-bottom: 4px;
             }
 
             .character-status {
-                font-size: 13px;
+                font-size: 11px;
             }
         }
 
@@ -369,27 +355,23 @@
             }
 
             #dialogue-info {
-                padding: 10px;
-            }
-
-            .dialogue-title {
-                font-size: 14px;
-            }
-
-            .dialogue-description {
-                font-size: 12px;
+                display: none;
             }
 
             #character-info {
-                padding: 10px;
+                top: 5px;
+                right: 5px;
+                padding: 6px 10px;
+                max-width: 150px;
             }
 
             .character-name {
-                font-size: 14px;
+                font-size: 12px;
+                margin-bottom: 3px;
             }
 
             .character-status {
-                font-size: 12px;
+                font-size: 10px;
             }
         }
 
@@ -402,23 +384,22 @@
             }
 
             #dialogue-selector {
-                top: 60px;
+                top: 50px;
                 left: 5px;
                 right: 5px;
             }
 
             #dialogue-info {
-                top: 120px;
-                left: 5px;
-                right: 5px;
-                padding: 8px;
+                display: none;
             }
 
             #character-info {
-                top: 160px;
-                left: 5px;
+                top: 5px;
                 right: 5px;
-                padding: 8px;
+                left: auto;
+                width: auto;
+                max-width: 180px;
+                padding: 6px 10px;
             }
 
             #subtitles {
@@ -436,7 +417,6 @@
             <div id="controls">
                 <button id="startBtn">Начать диалог</button>
                 <button id="pauseBtn" disabled>Пауза</button>
-                <button id="nextBtn" disabled>Следующая реплика</button>
             </div>
 
             <div id="dialogue-selector">

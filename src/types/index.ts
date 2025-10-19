@@ -40,7 +40,6 @@ export interface CharacterInterface {
 export interface UIElements {
   startBtn: HTMLButtonElement;
   pauseBtn: HTMLButtonElement;
-  nextBtn: HTMLButtonElement;
   subtitles: HTMLElement;
   currentSpeaker: HTMLElement;
   currentStatus: HTMLElement;
@@ -52,7 +51,6 @@ export interface UIElements {
 export interface UICallbacks {
   onStart?: () => void;
   onPause?: () => void;
-  onNext?: () => void;
   onDialogueSetChange?: (dialogueSetId: string) => void;
 }
 
