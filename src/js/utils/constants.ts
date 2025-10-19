@@ -2,9 +2,9 @@ import { CharacterData, AnimationSettings, CameraSettings, TTSSettings } from '@
 
 // Константы персонажей
 export const CHARACTER_DATA: CharacterData[] = [
-  { name: 'Алекс', color: 0x4CAF50, position: [-3, 0, 0] },
-  { name: 'Мария', color: 0x2196F3, position: [0, 0, 0] },
-  { name: 'Дмитрий', color: 0xFF9800, position: [3, 0, 0] }
+  { name: 'Лёха', color: 0x4CAF50, position: [-3, 0, 0] },
+  { name: 'Федот', color: 0x2196F3, position: [0, 0, 0] },
+  { name: 'Тихон', color: 0xFF9800, position: [3, 0, 0] }
 ];
 
 // Настройки анимации
