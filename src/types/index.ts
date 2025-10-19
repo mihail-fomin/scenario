@@ -143,7 +143,7 @@ export interface DialogueSetManagerInterface {
 // Интерфейс для управления UI
 export interface UIManagerInterface {
   setCallbacks(callbacks: UICallbacks): void;
-  showSubtitles(text: string): void;
+  showSubtitles(text: string, speakerName?: string): void;
   hideSubtitles(): void;
   updateSpeakerInfo(speakerName: string, status: string): void;
   setPlayingState(isPlaying: boolean, isPaused: boolean): void;

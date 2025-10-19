@@ -50,8 +50,12 @@ export class UIManager implements UIManagerInterface {
     this.callbacks = { ...this.callbacks, ...callbacks };
   }
   
-  public showSubtitles(text: string): void {
-    this.elements.subtitles.textContent = text;
+  public showSubtitles(text: string, speakerName?: string): void {
+    if (speakerName) {
+      this.elements.subtitles.innerHTML = `<div class="speaker-name">${speakerName}</div><div class="dialogue-text">${text}</div>`;
+    } else {
+      this.elements.subtitles.textContent = text;
+    }
     this.elements.subtitles.classList.add('show');
   }
   

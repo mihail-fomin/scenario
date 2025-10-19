@@ -192,7 +192,7 @@ export class App {
   private onDialogueChange(dialogue: Dialogue, character: CharacterInterface): void {
     // Обновление UI
     this.uiManager.updateSpeakerInfo(character.name, 'Говорит...');
-    this.uiManager.showSubtitles(dialogue.text);
+    this.uiManager.showSubtitles(dialogue.text, character.name);
     
     // Воспроизведение речи
     this.tts.speak(
