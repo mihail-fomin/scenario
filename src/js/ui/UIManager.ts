@@ -1,11 +1,12 @@
-import { UIManagerInterface, UIElements, UICallbacks } from '@/types/index';
+import { UIManagerInterface, UIElements, UICallbacks, DialogueSet } from '@/types/index';
 
 export class UIManager implements UIManagerInterface {
   private elements: UIElements;
   private callbacks: UICallbacks = {
     onStart: undefined,
     onPause: undefined,
-    onNext: undefined
+    onNext: undefined,
+    onDialogueSetChange: undefined
   };
   
   constructor() {
@@ -15,7 +16,9 @@ export class UIManager implements UIManagerInterface {
       nextBtn: document.getElementById('nextBtn') as HTMLButtonElement,
       subtitles: document.getElementById('subtitles') as HTMLElement,
       currentSpeaker: document.getElementById('currentSpeaker') as HTMLElement,
-      currentStatus: document.getElementById('currentStatus') as HTMLElement
+      currentStatus: document.getElementById('currentStatus') as HTMLElement,
+      dialogueSelector: document.getElementById('dialogue-selector') as HTMLElement,
+      dialogueInfo: document.getElementById('dialogue-info') as HTMLElement
     };
     
     this.setupEventListeners();
@@ -39,6 +42,8 @@ export class UIManager implements UIManagerInterface {
         this.callbacks.onNext();
       }
     });
+
+    // Обработчик для карточек диалогов будет добавлен в updateDialogueSelector
   }
   
   public setCallbacks(callbacks: UICallbacks): void {
@@ -86,5 +91,66 @@ export class UIManager implements UIManagerInterface {
   
   public showProgress(current: number, total: number): void {
     this.elements.currentStatus.textContent = `Реплика ${current} из ${total}`;
+  }
+
+  public updateDialogueSelector(dialogueSets: DialogueSet[], currentId: string): void {
+    if (!this.elements.dialogueSelector) {
+      console.warn('Элемент dialogue-selector не найден в DOM');
+      return;
+    }
+
+    // Очищаем текущие карточки
+    this.elements.dialogueSelector.innerHTML = '';
+    
+    // Создаем карточки для каждого диалога
+    dialogueSets.forEach(dialogueSet => {
+      const card = document.createElement('div');
+      card.className = 'dialogue-card';
+      card.dataset.dialogueId = dialogueSet.id;
+      
+      // Добавляем класс active для текущего диалога
+      if (dialogueSet.id === currentId) {
+        card.classList.add('active');
+      }
+      
+      card.innerHTML = `
+        <div class="dialogue-card-title">${dialogueSet.title}</div>
+        <div class="dialogue-card-description">${dialogueSet.description}</div>
+      `;
+      
+      // Добавляем обработчик клика
+      card.addEventListener('click', () => {
+        if (this.callbacks.onDialogueSetChange) {
+          this.callbacks.onDialogueSetChange(dialogueSet.id);
+        }
+      });
+      
+      this.elements.dialogueSelector.appendChild(card);
+    });
+  }
+
+  public setDialogueInfo(title: string, description: string): void {
+    if (this.elements.dialogueInfo) {
+      this.elements.dialogueInfo.innerHTML = `
+        <div class="dialogue-title">${title}</div>
+        <div class="dialogue-description">${description}</div>
+      `;
+    } else {
+      console.warn('Элемент dialogue-info не найден в DOM');
+    }
+  }
+
+  public setActiveDialogueCard(dialogueId: string): void {
+    if (!this.elements.dialogueSelector) return;
+
+    // Убираем класс active со всех карточек
+    const cards = this.elements.dialogueSelector.querySelectorAll('.dialogue-card');
+    cards.forEach(card => card.classList.remove('active'));
+
+    // Добавляем класс active к выбранной карточке
+    const activeCard = this.elements.dialogueSelector.querySelector(`[data-dialogue-id="${dialogueId}"]`);
+    if (activeCard) {
+      activeCard.classList.add('active');
+    }
   }
 }

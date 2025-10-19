@@ -56,6 +56,83 @@
             left: 20px;
             pointer-events: auto;
         }
+
+        #dialogue-selector {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: auto;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 90%;
+        }
+
+        .dialogue-card {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 2px solid #555;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            text-align: center;
+            min-width: 120px;
+            max-width: 200px;
+        }
+
+        .dialogue-card:hover {
+            background: rgba(0, 0, 0, 0.9);
+            border-color: #4CAF50;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .dialogue-card.active {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+        }
+
+        .dialogue-card-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+            font-size: 16px;
+        }
+
+        .dialogue-card-description {
+            font-size: 12px;
+            color: #ccc;
+            line-height: 1.3;
+        }
+
+        #dialogue-info {
+            position: absolute;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            pointer-events: auto;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .dialogue-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .dialogue-description {
+            font-size: 14px;
+            color: #ccc;
+        }
         
         button {
             background: #4CAF50;
@@ -107,6 +184,15 @@
                 <button id="startBtn">Начать диалог</button>
                 <button id="pauseBtn" disabled>Пауза</button>
                 <button id="nextBtn" disabled>Следующая реплика</button>
+            </div>
+
+            <div id="dialogue-selector">
+                <!-- Карточки диалогов будут добавлены динамически -->
+            </div>
+
+            <div id="dialogue-info">
+                <div class="dialogue-title">Выберите диалог</div>
+                <div class="dialogue-description">Используйте селектор выше для выбора диалога</div>
             </div>
             
             <div id="character-info">

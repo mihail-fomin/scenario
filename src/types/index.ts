@@ -14,6 +14,14 @@ export interface Dialogue {
   position: number;
 }
 
+// Новый тип для набора диалогов
+export interface DialogueSet {
+  id: string;
+  title: string;
+  description: string;
+  dialogues: Dialogue[];
+}
+
 // Типы персонажа
 export interface CharacterInterface {
   name: string;
@@ -36,6 +44,8 @@ export interface UIElements {
   subtitles: HTMLElement;
   currentSpeaker: HTMLElement;
   currentStatus: HTMLElement;
+  dialogueSelector: HTMLElement;
+  dialogueInfo: HTMLElement;
 }
 
 // Типы колбэков UI
@@ -43,6 +53,7 @@ export interface UICallbacks {
   onStart?: () => void;
   onPause?: () => void;
   onNext?: () => void;
+  onDialogueSetChange?: (dialogueSetId: string) => void;
 }
 
 // Типы прогресса диалога
@@ -88,6 +99,8 @@ export interface DialogueSystemInterface {
   getIsPlaying(): boolean;
   getIsPaused(): boolean;
   getProgress(): DialogueProgress;
+  setDialogueSet(dialogueSet: DialogueSet): void;
+  getCurrentDialogueSet(): DialogueSet | undefined;
 }
 
 // Интерфейс для системы TTS
@@ -118,6 +131,15 @@ export interface SceneManagerInterface {
   dispose(): void;
 }
 
+// Новый интерфейс для управления наборами диалогов
+export interface DialogueSetManagerInterface {
+  addDialogueSet(dialogueSet: DialogueSet): void;
+  getDialogueSet(id: string): DialogueSet | undefined;
+  getAllDialogueSets(): DialogueSet[];
+  setCurrentDialogueSet(id: string): void;
+  getCurrentDialogueSet(): DialogueSet | undefined;
+}
+
 // Интерфейс для управления UI
 export interface UIManagerInterface {
   setCallbacks(callbacks: UICallbacks): void;
@@ -128,4 +150,7 @@ export interface UIManagerInterface {
   setReadyState(): void;
   showError(message: string): void;
   showProgress(current: number, total: number): void;
+  updateDialogueSelector(dialogueSets: DialogueSet[], currentId: string): void;
+  setDialogueInfo(title: string, description: string): void;
+  setActiveDialogueCard(dialogueId: string): void;
 }

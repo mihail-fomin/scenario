@@ -1,4 +1,4 @@
-import { Dialogue, DialogueSystemInterface, DialogueProgress, CharacterInterface } from '@/types/index';
+import { Dialogue, DialogueSystemInterface, DialogueProgress, CharacterInterface, DialogueSet } from '@/types/index';
 
 export class DialogueSystem implements DialogueSystemInterface {
   private characters: CharacterInterface[];
@@ -6,8 +6,9 @@ export class DialogueSystem implements DialogueSystemInterface {
   private currentDialogueIndex: number = 0;
   private isPlaying: boolean = false;
   private isPaused: boolean = false;
+  private currentDialogueSet: DialogueSet | null = null;
   
-  // Диалоги между персонажами
+  // Диалоги между персонажами (по умолчанию)
   private dialogues: Dialogue[] = [
     {
       speaker: 'Лёха',
@@ -133,7 +134,8 @@ export class DialogueSystem implements DialogueSystemInterface {
   }
   
   public next(): void {
-    if (this.currentDialogueIndex < this.dialogues.length - 1) {
+    const dialogues = this.currentDialogueSet ? this.currentDialogueSet.dialogues : this.dialogues;
+    if (this.currentDialogueIndex < dialogues.length - 1) {
       this.currentDialogueIndex++;
       this.playCurrentDialogue();
     } else {
@@ -144,7 +146,8 @@ export class DialogueSystem implements DialogueSystemInterface {
   private playCurrentDialogue(): void {
     if (this.isPaused) return;
     
-    const dialogue = this.dialogues[this.currentDialogueIndex];
+    const dialogues = this.currentDialogueSet ? this.currentDialogueSet.dialogues : this.dialogues;
+    const dialogue = dialogues[this.currentDialogueIndex];
     const character = this.characters[dialogue.position];
     
     // Остановка предыдущего говорящего
@@ -170,7 +173,8 @@ export class DialogueSystem implements DialogueSystemInterface {
   }
   
   public getCurrentDialogue(): Dialogue | undefined {
-    return this.dialogues[this.currentDialogueIndex];
+    const dialogues = this.currentDialogueSet ? this.currentDialogueSet.dialogues : this.dialogues;
+    return dialogues[this.currentDialogueIndex];
   }
   
   public getIsPlaying(): boolean {
@@ -182,9 +186,26 @@ export class DialogueSystem implements DialogueSystemInterface {
   }
   
   public getProgress(): DialogueProgress {
+    const dialogues = this.currentDialogueSet ? this.currentDialogueSet.dialogues : this.dialogues;
     return {
       current: this.currentDialogueIndex + 1,
-      total: this.dialogues.length
+      total: dialogues.length
     };
+  }
+
+  public setDialogueSet(dialogueSet: DialogueSet): void {
+    this.currentDialogueSet = dialogueSet;
+    this.currentDialogueIndex = 0;
+    this.isPlaying = false;
+    this.isPaused = false;
+    
+    // Сброс всех персонажей
+    this.characters.forEach(char => {
+      char.stopSpeaking();
+    });
+  }
+
+  public getCurrentDialogueSet(): DialogueSet | undefined {
+    return this.currentDialogueSet || undefined;
   }
 }
