@@ -75,29 +75,27 @@
 
         #dialogue-selector {
             position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 80px;
+            left: 20px;
             pointer-events: auto;
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            max-width: 90%;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 300px;
         }
 
         .dialogue-card {
             background: rgba(0, 0, 0, 0.8);
             color: white;
-            padding: 12px 20px;
+            padding: 12px 16px;
             border-radius: 8px;
             border: 2px solid #555;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 14px;
-            text-align: center;
-            min-width: 120px;
-            max-width: 200px;
+            text-align: left;
+            width: 100%;
+            max-width: 280px;
         }
 
         .dialogue-card:hover {
@@ -254,17 +252,16 @@
             }
 
             #dialogue-selector {
-                top: 60px;
+                top: 70px;
                 left: 10px;
                 right: 10px;
                 transform: none;
                 max-width: none;
-                gap: 8px;
+                gap: 6px;
             }
 
             .dialogue-card {
-                flex: 1;
-                min-width: 100px;
+                width: 100%;
                 max-width: none;
                 padding: 10px 12px;
                 font-size: 12px;
@@ -355,9 +352,10 @@
             }
 
             #dialogue-selector {
-                top: 50px;
+                top: 60px;
                 left: 5px;
                 right: 5px;
+                gap: 4px;
             }
 
             #dialogue-info {
