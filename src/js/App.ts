@@ -219,10 +219,119 @@ export class App {
       ]
     };
 
+    const dialogueSet4: DialogueSet = {
+      id: 'dialogue4',
+      title: 'Проблема с волосами',
+      description: 'Диалог про облысение - Леха утверждает, что не лысеет, а у него просто форма буквы М',
+      dialogues: [
+        {
+          speaker: 'Федот',
+          text: 'Блять, Лёха, у тебя что, лысина уже? На висках-то волос нет!',
+          position: 1
+        },
+        {
+          speaker: 'Тихон',
+          text: 'Да, я тоже заметил! У тебя уже залысины видны!',
+          position: 2
+        },
+        {
+          speaker: 'Лёха',
+          text: 'Что за хуйню вы несете? Я не лысею! У меня просто такая форма головы!',
+          position: 0
+        },
+        {
+          speaker: 'Федот',
+          text: 'Ахахаха! "Форма головы"! Да ты уже почти лысый!',
+          position: 1
+        },
+        {
+          speaker: 'Тихон',
+          text: 'Да, Лёха, признавайся! У тебя уже залысины как у деда!',
+          position: 2
+        },
+        {
+          speaker: 'Лёха',
+          text: 'Ебать, да я же говорю - я НЕ ЛЫСЕЮ! Это просто особенность!',
+          position: 0
+        },
+        {
+          speaker: 'Федот',
+          text: 'Особенность? Ахахаха! Да ты скоро совсем лысый будешь!',
+          position: 1
+        },
+        {
+          speaker: 'Тихон',
+          text: 'Да, Лёха, смирись уже! Ты лысеешь!',
+          position: 2
+        },
+        {
+          speaker: 'Лёха',
+          text: 'Блять, да я же не лысею! У меня просто... просто... это похоже на букву М!',
+          position: 0
+        },
+        {
+          speaker: 'Федот',
+          text: 'Ахахаха! "Букву М"! Да ты придумал!',
+          position: 1
+        },
+        {
+          speaker: 'Тихон',
+          text: 'Да, Лёха! "Буква М"! Ахахаха!',
+          position: 2
+        },
+        {
+          speaker: 'Лёха',
+          text: 'Да! М - это Михеев! Моя фамилия! Это не лысина, это моя особенность!',
+          position: 0
+        },
+        {
+          speaker: 'Федот',
+          text: 'Ахахаха! "Михеев"! Да ты совсем ебанулся!',
+          position: 1
+        },
+        {
+          speaker: 'Тихон',
+          text: 'Да, Лёха! "Михеев"! Ахахаха! Ты лысеешь, а придумываешь!',
+          position: 2
+        },
+        {
+          speaker: 'Лёха',
+          text: 'Ебать вашу мать! Я НЕ ЛЫСЕЮ! У меня просто форма головы как буква М!',
+          position: 0
+        },
+        {
+          speaker: 'Федот',
+          text: 'Ахахаха! "Форма головы"! Да ты скоро совсем лысый будешь!',
+          position: 1
+        },
+        {
+          speaker: 'Тихон',
+          text: 'Да, Лёха! Признавайся уже! Ты лысеешь!',
+          position: 2
+        },
+        {
+          speaker: 'Лёха',
+          text: 'БЛЯТЬ! Я НЕ ЛЫСЕЮ! У МЕНЯ ПРОСТО ТАКАЯ ФОРМА ГОЛОВЫ!',
+          position: 0
+        },
+        {
+          speaker: 'Федот',
+          text: 'Ахахаха! "Форма головы"! Да ты совсем ебанулся!',
+          position: 1
+        },
+        {
+          speaker: 'Тихон',
+          text: 'Да, Лёха! Ты лысеешь, а придумываешь всякую хуйню!',
+          position: 2
+        }
+      ]
+    };
+
     // Добавляем наборы диалогов
     this.dialogueSetManager.addDialogueSet(dialogueSet1);
     this.dialogueSetManager.addDialogueSet(dialogueSet2);
     this.dialogueSetManager.addDialogueSet(dialogueSet3);
+    this.dialogueSetManager.addDialogueSet(dialogueSet4);
 
     // Устанавливаем первый набор как текущий
     this.dialogueSetManager.setCurrentDialogueSet('dialogue1');
