@@ -5,7 +5,8 @@ export class UIManager implements UIManagerInterface {
   private callbacks: UICallbacks = {
     onStart: undefined,
     onPause: undefined,
-    onDialogueSetChange: undefined
+    onDialogueSetChange: undefined,
+    onDialogueStart: undefined
   };
   
   constructor() {
@@ -122,7 +123,15 @@ export class UIManager implements UIManagerInterface {
         }
       };
 
+      // Добавляем обработчик двойного клика для автоматического запуска диалога
+      const handleCardDoubleClick = () => {
+        if (this.callbacks.onDialogueStart) {
+          this.callbacks.onDialogueStart(dialogueSet.id);
+        }
+      };
+
       card.addEventListener('click', handleCardClick);
+      card.addEventListener('dblclick', handleCardDoubleClick);
       card.addEventListener('touchend', (e) => {
         e.preventDefault();
         handleCardClick();

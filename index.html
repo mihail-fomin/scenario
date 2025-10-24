@@ -96,6 +96,7 @@
             text-align: left;
             width: 100%;
             max-width: 280px;
+            position: relative;
         }
 
         .dialogue-card:hover {
@@ -128,9 +129,24 @@
             line-height: 1.3;
         }
 
+        .dialogue-card::after {
+            content: "Двойной клик для запуска";
+            position: absolute;
+            bottom: 4px;
+            right: 8px;
+            font-size: 10px;
+            color: #888;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .dialogue-card:hover::after {
+            opacity: 1;
+        }
+
         #dialogue-info {
             position: absolute;
-            top: 120px;
+            top: 15px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.7);

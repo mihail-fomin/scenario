@@ -50,6 +50,7 @@ export interface UICallbacks {
   onStart?: () => void;
   onPause?: () => void;
   onDialogueSetChange?: (dialogueSetId: string) => void;
+  onDialogueStart?: (dialogueSetId: string) => void;
 }
 
 // Типы прогресса диалога

@@ -244,7 +244,8 @@ export class App {
     this.uiManager.setCallbacks({
       onStart: () => this.startDialogue(),
       onPause: () => this.pauseDialogue(),
-      onDialogueSetChange: (dialogueSetId: string) => this.changeDialogueSet(dialogueSetId)
+      onDialogueSetChange: (dialogueSetId: string) => this.changeDialogueSet(dialogueSetId),
+      onDialogueStart: (dialogueSetId: string) => this.startDialogueFromCard(dialogueSetId)
     });
 
     // Инициализируем селектор диалогов
@@ -347,6 +348,16 @@ export class App {
         this.uiManager.hideSubtitles();
       }
     }
+  }
+
+  private startDialogueFromCard(dialogueSetId: string): void {
+    // Сначала меняем набор диалогов
+    this.changeDialogueSet(dialogueSetId);
+    
+    // Затем автоматически запускаем диалог
+    setTimeout(() => {
+      this.startDialogue();
+    }, 100); // Небольшая задержка для корректной инициализации
   }
   
   public start(): void {
