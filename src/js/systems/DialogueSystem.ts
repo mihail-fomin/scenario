@@ -8,109 +8,6 @@ export class DialogueSystem implements DialogueSystemInterface {
   private isPaused: boolean = false;
   private currentDialogueSet: DialogueSet | null = null;
   
-  // Диалоги между персонажами (по умолчанию)
-  private dialogues: Dialogue[] = [
-    {
-      speaker: 'Лёха',
-      text: 'Бля, Тихон, что с тобой? Лежишь как овощ!',
-      position: 0
-    },
-    {
-      speaker: 'Федот',
-      text: 'Да вставай уже, придурок! Хватит притворяться!',
-      position: 1
-    },
-    {
-      speaker: 'Тихон',
-      text: 'Блять, ребята... У меня нога сломана! Не могу встать!',
-      position: 2
-    },
-    {
-      speaker: 'Лёха',
-      text: 'Ахахаха! Сломана? Да ты просто неудачно прыгнул с гаража!',
-      position: 0
-    },
-    {
-      speaker: 'Федот',
-      text: 'Да ладно, вставай! Мы же видели, как ты прыгал. Ничего страшного!',
-      position: 1
-    },
-    {
-      speaker: 'Тихон',
-      text: 'Ебать, да я же говорю - НОГА СЛОМАНА! Болит как сука!',
-      position: 2
-    },
-    {
-      speaker: 'Лёха',
-      text: 'Блять, Тихон, хватит ныть! Давай вставай, идем дальше!',
-      position: 0
-    },
-    {
-      speaker: 'Федот',
-      text: 'Да, давай уже! Мы тебя ждем тут как дураки!',
-      position: 1
-    },
-    {
-      speaker: 'Тихон',
-      text: 'Ебать вашу мать! Я не могу! Нога не держит!',
-      position: 2
-    },
-    {
-      speaker: 'Лёха',
-      text: 'Ахахаха! "Не держит"! Да ты просто трус!',
-      position: 0
-    },
-    {
-      speaker: 'Федот',
-      text: 'Да, давай уже! Хватит прикидываться!',
-      position: 1
-    },
-    {
-      speaker: 'Тихон',
-      text: 'БЛЯТЬ! Я НЕ ПРИКИДЫВАЮСЬ! У МЕНЯ НОГА СЛОМАНА!',
-      position: 2
-    },
-    {
-      speaker: 'Лёха',
-      text: 'Ну и хуй с тобой! Идем без него, Федот!',
-      position: 0
-    },
-    {
-      speaker: 'Федот',
-      text: 'Да, пошли! Пусть лежит тут, если хочет!',
-      position: 1
-    },
-    {
-      speaker: 'Тихон',
-      text: 'Ебать, ребята! Не бросайте меня! Вызовите скорую!',
-      position: 2
-    },
-    {
-      speaker: 'Лёха',
-      text: 'Ахахаха! "Скорую"! Да ты просто ленивый!',
-      position: 0
-    },
-    {
-      speaker: 'Федот',
-      text: 'Да, давай уже вставай! Хватит ныть!',
-      position: 1
-    },
-    {
-      speaker: 'Тихон',
-      text: 'БЛЯТЬ! Я УМРУ ТУТ! ВЫЗОВИТЕ СКОРУЮ!',
-      position: 2
-    },
-    {
-      speaker: 'Лёха',
-      text: 'Ну и хуй с тобой! Идем, Федот!',
-      position: 0
-    },
-    {
-      speaker: 'Федот',
-      text: 'Да, пошли! Пусть лежит!',
-      position: 1
-    }
-  ];
 
   constructor(characters: CharacterInterface[], onDialogueChange: (dialogue: Dialogue, character: CharacterInterface) => void) {
     this.characters = characters;
@@ -134,7 +31,9 @@ export class DialogueSystem implements DialogueSystemInterface {
   }
   
   public next(): void {
-    const dialogues = this.currentDialogueSet ? this.currentDialogueSet.dialogues : this.dialogues;
+    if (!this.currentDialogueSet) return;
+    
+    const dialogues = this.currentDialogueSet.dialogues;
     if (this.currentDialogueIndex < dialogues.length - 1) {
       this.currentDialogueIndex++;
       this.playCurrentDialogue();
@@ -144,9 +43,9 @@ export class DialogueSystem implements DialogueSystemInterface {
   }
   
   private playCurrentDialogue(): void {
-    if (this.isPaused) return;
+    if (this.isPaused || !this.currentDialogueSet) return;
     
-    const dialogues = this.currentDialogueSet ? this.currentDialogueSet.dialogues : this.dialogues;
+    const dialogues = this.currentDialogueSet.dialogues;
     const dialogue = dialogues[this.currentDialogueIndex];
     const character = this.characters[dialogue.position];
     
@@ -173,7 +72,9 @@ export class DialogueSystem implements DialogueSystemInterface {
   }
   
   public getCurrentDialogue(): Dialogue | undefined {
-    const dialogues = this.currentDialogueSet ? this.currentDialogueSet.dialogues : this.dialogues;
+    if (!this.currentDialogueSet) return undefined;
+    
+    const dialogues = this.currentDialogueSet.dialogues;
     return dialogues[this.currentDialogueIndex];
   }
   
@@ -186,7 +87,11 @@ export class DialogueSystem implements DialogueSystemInterface {
   }
   
   public getProgress(): DialogueProgress {
-    const dialogues = this.currentDialogueSet ? this.currentDialogueSet.dialogues : this.dialogues;
+    if (!this.currentDialogueSet) {
+      return { current: 0, total: 0 };
+    }
+    
+    const dialogues = this.currentDialogueSet.dialogues;
     return {
       current: this.currentDialogueIndex + 1,
       total: dialogues.length
