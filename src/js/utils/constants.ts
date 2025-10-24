@@ -1,10 +1,10 @@
 import { CharacterData, AnimationSettings, CameraSettings, TTSSettings } from '@/types/index';
 
-// Константы персонажей - расположены в кругу
+// Константы персонажей - стоят перед забором
 export const CHARACTER_DATA: CharacterData[] = [
-  { name: 'Лёха', color: 0x4CAF50, position: [0, 0, -3] },      // Спереди
-  { name: 'Федот', color: 0x2196F3, position: [-2.6, 0, 1.5] }, // Слева-сзади
-  { name: 'Тихон', color: 0xFF9800, position: [2.6, 0, 1.5] }   // Справа-сзади
+  { name: 'Лёха', color: 0x4CAF50, position: [0, 0, -2] },      // По центру перед забором
+  { name: 'Федот', color: 0x2196F3, position: [-2, 0, -1] },    // Слева перед забором
+  { name: 'Тихон', color: 0xFF9800, position: [2, 0, -1] }      // Справа перед забором
 ];
 
 // Настройки анимации
@@ -18,8 +18,8 @@ export const ANIMATION_SETTINGS: AnimationSettings = {
 // Настройки камеры
 export const CAMERA_SETTINGS: CameraSettings = {
   ROTATION_SPEED: 0.0005,
-  RADIUS: 8,
-  HEIGHT: 2
+  RADIUS: 10,
+  HEIGHT: 3
 };
 
 // Настройки TTS
