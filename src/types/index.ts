@@ -41,8 +41,6 @@ export interface UIElements {
   startBtn: HTMLButtonElement;
   pauseBtn: HTMLButtonElement;
   subtitles: HTMLElement;
-  currentSpeaker: HTMLElement;
-  currentStatus: HTMLElement;
   dialogueSelector: HTMLElement;
   dialogueInfo: HTMLElement;
 }
@@ -143,7 +141,6 @@ export interface UIManagerInterface {
   setCallbacks(callbacks: UICallbacks): void;
   showSubtitles(text: string, speakerName?: string): void;
   hideSubtitles(): void;
-  updateSpeakerInfo(speakerName: string, status: string): void;
   setPlayingState(isPlaying: boolean, isPaused: boolean): void;
   setReadyState(): void;
   showError(message: string): void;

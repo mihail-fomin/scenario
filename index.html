@@ -14,13 +14,13 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
-        
+
         #canvas-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         #ui {
             position: absolute;
             top: 0;
@@ -30,7 +30,7 @@
             pointer-events: none;
             z-index: 100;
         }
-        
+
         #subtitles {
             position: absolute;
             bottom: 20px;
@@ -61,11 +61,11 @@
             font-size: 18px;
             line-height: 1.4;
         }
-        
+
         #subtitles.show {
             opacity: 1;
         }
-        
+
         #controls {
             position: absolute;
             top: 20px;
@@ -154,7 +154,7 @@
             font-size: 14px;
             color: #ccc;
         }
-        
+
         button {
             background: #4CAF50;
             color: white;
@@ -165,7 +165,7 @@
             cursor: pointer;
             font-size: 16px;
         }
-        
+
         button:hover {
             background: #45a049;
         }
@@ -174,7 +174,7 @@
             background: #3d8b40;
             transform: translateY(1px);
         }
-        
+
         button:disabled {
             background: #666;
             cursor: not-allowed;
@@ -183,18 +183,7 @@
         button:disabled:active {
             transform: none;
         }
-        
-        #character-info {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            pointer-events: auto;
-        }
-        
+
         .character-name {
             font-weight: bold;
             font-size: 18px;
@@ -298,18 +287,6 @@
                 display: none;
             }
 
-            #character-info {
-                top: 10px;
-                right: 10px;
-                left: auto;
-                width: auto;
-                max-width: 200px;
-                padding: 8px 12px;
-                background: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(3px);
-                -webkit-backdrop-filter: blur(3px);
-                border-radius: 6px;
-            }
 
             .character-name {
                 font-size: 14px;
@@ -358,12 +335,6 @@
                 display: none;
             }
 
-            #character-info {
-                top: 5px;
-                right: 5px;
-                padding: 6px 10px;
-                max-width: 150px;
-            }
 
             .character-name {
                 font-size: 12px;
@@ -393,14 +364,6 @@
                 display: none;
             }
 
-            #character-info {
-                top: 5px;
-                right: 5px;
-                left: auto;
-                width: auto;
-                max-width: 180px;
-                padding: 6px 10px;
-            }
 
             #subtitles {
                 bottom: 5px;
@@ -427,16 +390,10 @@
                 <div class="dialogue-title">Выберите диалог</div>
                 <div class="dialogue-description">Используйте селектор выше для выбора диалога</div>
             </div>
-            
-            <div id="character-info">
-                <div class="character-name" id="currentSpeaker">Готов к диалогу</div>
-                <div class="character-status" id="currentStatus">Нажмите "Начать диалог"</div>
-            </div>
-            
             <div id="subtitles"></div>
         </div>
     </div>
-    
+
     <script type="module" src="/main.ts"></script>
 </body>
 </html>

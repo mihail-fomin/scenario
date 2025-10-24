@@ -13,8 +13,6 @@ export class UIManager implements UIManagerInterface {
       startBtn: document.getElementById('startBtn') as HTMLButtonElement,
       pauseBtn: document.getElementById('pauseBtn') as HTMLButtonElement,
       subtitles: document.getElementById('subtitles') as HTMLElement,
-      currentSpeaker: document.getElementById('currentSpeaker') as HTMLElement,
-      currentStatus: document.getElementById('currentStatus') as HTMLElement,
       dialogueSelector: document.getElementById('dialogue-selector') as HTMLElement,
       dialogueInfo: document.getElementById('dialogue-info') as HTMLElement
     };
@@ -65,10 +63,6 @@ export class UIManager implements UIManagerInterface {
     this.elements.subtitles.classList.remove('show');
   }
   
-  public updateSpeakerInfo(speakerName: string, status: string): void {
-    this.elements.currentSpeaker.textContent = speakerName;
-    this.elements.currentStatus.textContent = status;
-  }
   
   public setPlayingState(isPlaying: boolean, isPaused: boolean): void {
     this.elements.startBtn.disabled = isPlaying;
@@ -85,16 +79,15 @@ export class UIManager implements UIManagerInterface {
     this.elements.startBtn.disabled = false;
     this.elements.pauseBtn.disabled = true;
     this.elements.pauseBtn.textContent = 'Пауза';
-    this.updateSpeakerInfo('Готов к диалогу', 'Нажмите "Начать диалог"');
   }
   
   public showError(message: string): void {
     console.error('UI Error:', message);
-    this.updateSpeakerInfo('Ошибка', message);
   }
   
   public showProgress(current: number, total: number): void {
-    this.elements.currentStatus.textContent = `Реплика ${current} из ${total}`;
+    // Прогресс теперь отображается в субтитрах
+    console.log(`Прогресс: ${current} из ${total}`);
   }
 
   public updateDialogueSelector(dialogueSets: DialogueSet[], currentId: string): void {
