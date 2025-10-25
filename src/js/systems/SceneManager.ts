@@ -70,6 +70,9 @@ export class SceneManager implements SceneManagerInterface {
     // Создание веранд между забором и детским садом
     this.createVerandas();
     
+    // Создание труб возле забора
+    this.createPipes();
+    
     // Несколько деревьев по бокам для атмосферы
     this.createSideTrees();
   }
@@ -220,6 +223,25 @@ export class SceneManager implements SceneManagerInterface {
     // Вторая веранда (ближе к детскому саду)
     const veranda2 = this.createSingleVeranda(10, -15);
     this.scene.add(veranda2);
+  }
+
+  private createSinglePipe(x: number, z: number): THREE.Mesh {
+    const pipeGeometry = new THREE.CylinderGeometry(0.3, 0.3, 8, 16);
+    const pipeMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 }); // Коричневый цвет
+    const pipe = new THREE.Mesh(pipeGeometry, pipeMaterial);
+    pipe.position.set(x, 0.3, z); // На полу (y = 0.3 - радиус трубы)
+    pipe.rotation.z = Math.PI / 2; // Горизонтально
+    pipe.castShadow = true;
+    pipe.receiveShadow = true;
+    return pipe;
+  }
+
+  private createPipes(): void {
+    const pipe1 = this.createSinglePipe(0, -5);
+    this.scene.add(pipe1);
+    
+    const pipe2 = this.createSinglePipe(0, -5.5);
+    this.scene.add(pipe2);
   }
 
   private createSideTrees(): void {
