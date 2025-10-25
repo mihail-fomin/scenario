@@ -19,7 +19,14 @@ export const ANIMATION_SETTINGS: AnimationSettings = {
 export const CAMERA_SETTINGS: CameraSettings = {
   ROTATION_SPEED: 0.0005,
   RADIUS: 10,
-  HEIGHT: 3
+  HEIGHT: 3,
+  SENSITIVITY: 0.002,
+  AUTO_RETURN_DELAY: 3000,
+  TRANSITION_SPEED: 0.02,
+  MIN_RADIUS: 3,
+  MAX_RADIUS: 20,
+  ZOOM_SENSITIVITY: 0.8,
+  ZOOM_SPEED: 0.05
 };
 
 // Настройки TTS

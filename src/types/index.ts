@@ -72,6 +72,13 @@ export interface CameraSettings {
   ROTATION_SPEED: number;
   RADIUS: number;
   HEIGHT: number;
+  SENSITIVITY: number;
+  AUTO_RETURN_DELAY: number;
+  TRANSITION_SPEED: number;
+  MIN_RADIUS: number;
+  MAX_RADIUS: number;
+  ZOOM_SENSITIVITY: number;
+  ZOOM_SPEED: number;
 }
 
 // Типы настроек TTS

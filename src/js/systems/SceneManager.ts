@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { SceneManagerInterface, CharacterInterface } from '@/types/index';
-import { CAMERA_SETTINGS } from '../utils/constants.js';
+import { CameraController } from './CameraController.js';
 
 export class SceneManager implements SceneManagerInterface {
   private scene!: THREE.Scene;
@@ -8,6 +8,7 @@ export class SceneManager implements SceneManagerInterface {
   private renderer!: THREE.WebGLRenderer;
   private characters: CharacterInterface[] = [];
   private nameLabels: THREE.Mesh[] = [];
+  private cameraController!: CameraController;
   
   constructor() {
     this.init();
@@ -34,6 +35,9 @@ export class SceneManager implements SceneManagerInterface {
     
     // Создание окружения
     this.createEnvironment();
+    
+    // Инициализация контроллера камеры
+    this.cameraController = new CameraController(this.camera);
   }
   
   private setupLighting(): void {
@@ -196,12 +200,8 @@ export class SceneManager implements SceneManagerInterface {
       character.update(deltaTime);
     });
     
-    // Вращение камеры вокруг сцены
-    const time = Date.now() * CAMERA_SETTINGS.ROTATION_SPEED;
-    this.camera.position.x = Math.sin(time) * CAMERA_SETTINGS.RADIUS;
-    this.camera.position.z = Math.cos(time) * CAMERA_SETTINGS.RADIUS;
-    this.camera.position.y = CAMERA_SETTINGS.HEIGHT;
-    this.camera.lookAt(0, 0, 0);
+    // Обновление контроллера камеры
+    this.cameraController.update(deltaTime);
   }
   
   public render(): void {
@@ -237,6 +237,9 @@ export class SceneManager implements SceneManagerInterface {
     this.characters.forEach(character => {
       character.dispose();
     });
+    
+    // Очистка контроллера камеры
+    this.cameraController.dispose();
     
     // Очистка сцены
     this.scene.traverse((object) => {
