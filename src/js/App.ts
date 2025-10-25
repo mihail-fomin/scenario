@@ -5,6 +5,8 @@ import { TextToSpeech } from './systems/TextToSpeech.js';
 import { SceneManager } from './systems/SceneManager.js';
 import { UIManager } from './ui/UIManager.js';
 import { CHARACTER_DATA } from './utils/constants.js';
+import { armyDialogueSet } from './data/armyDialogue.js';
+import { tikhonCharacterDialogueSet } from './data/tikhonCharacterDialogue.js';
 import { Dialogue, CharacterInterface, DialogueSystemInterface, TTSInterface, SceneManagerInterface, UIManagerInterface, DialogueSet, DialogueSetManagerInterface } from '@/types/index';
 
 export class App {
@@ -264,6 +266,8 @@ export class App {
     // Добавляем наборы диалогов
     this.dialogueSetManager.addDialogueSet(dialogueSet1);
     this.dialogueSetManager.addDialogueSet(dialogueSet2);
+    this.dialogueSetManager.addDialogueSet(armyDialogueSet);
+    this.dialogueSetManager.addDialogueSet(tikhonCharacterDialogueSet);
 
     // Устанавливаем первый набор как текущий
     this.dialogueSetManager.setCurrentDialogueSet('dialogue1');
