@@ -154,72 +154,6 @@ export class App {
     };
 
     const dialogueSet2: DialogueSet = {
-      id: 'dialogue2',
-      title: 'План на вечер',
-      description: 'Обсуждение планов на вечер между друзьями',
-      dialogues: [
-        {
-          speaker: 'Лёха',
-          text: 'Ребята, что будем делать сегодня вечером?',
-          position: 0
-        },
-        {
-          speaker: 'Федот',
-          text: 'Может, в кино сходим? Новый фильм вышел!',
-          position: 1
-        },
-        {
-          speaker: 'Тихон',
-          text: 'А я хотел бы просто посидеть дома, посмотреть сериал...',
-          position: 2
-        },
-        {
-          speaker: 'Лёха',
-          text: 'Тихон, хватит быть домоседом! Давай развлекаться!',
-          position: 0
-        },
-        {
-          speaker: 'Федот',
-          text: 'Да, давай в кино! Будет весело!',
-          position: 1
-        }
-      ]
-    };
-
-    const dialogueSet3: DialogueSet = {
-      id: 'dialogue3',
-      title: 'Воспоминания детства',
-      description: 'Вспоминают старые времена и детские приключения',
-      dialogues: [
-        {
-          speaker: 'Тихон',
-          text: 'Помните, как мы в детстве на велосипедах гоняли?',
-          position: 2
-        },
-        {
-          speaker: 'Лёха',
-          text: 'Да! А помнишь, как ты в лужу упал?',
-          position: 0
-        },
-        {
-          speaker: 'Федот',
-          text: 'Ахахаха! Да, он весь мокрый был!',
-          position: 1
-        },
-        {
-          speaker: 'Тихон',
-          text: 'Блять, да я же не специально! Велосипед занесло!',
-          position: 2
-        },
-        {
-          speaker: 'Лёха',
-          text: 'А мы смеялись как сумасшедшие!',
-          position: 0
-        }
-      ]
-    };
-
-    const dialogueSet4: DialogueSet = {
       id: 'dialogue4',
       title: 'Проблема с волосами',
       description: 'Диалог про облысение - Леха утверждает, что не лысеет, а у него просто форма буквы М',
@@ -330,8 +264,6 @@ export class App {
     // Добавляем наборы диалогов
     this.dialogueSetManager.addDialogueSet(dialogueSet1);
     this.dialogueSetManager.addDialogueSet(dialogueSet2);
-    this.dialogueSetManager.addDialogueSet(dialogueSet3);
-    this.dialogueSetManager.addDialogueSet(dialogueSet4);
 
     // Устанавливаем первый набор как текущий
     this.dialogueSetManager.setCurrentDialogueSet('dialogue1');

@@ -67,6 +67,9 @@ export class SceneManager implements SceneManagerInterface {
     // Создание детского сада
     this.createKindergarten();
     
+    // Создание веранд между забором и детским садом
+    this.createVerandas();
+    
     // Несколько деревьев по бокам для атмосферы
     this.createSideTrees();
   }
@@ -154,6 +157,69 @@ export class SceneManager implements SceneManagerInterface {
     kindergartenGroup.add(door);
 
     this.scene.add(kindergartenGroup);
+  }
+
+  private createSingleVeranda(x: number, z: number): THREE.Group {
+    const verandaGroup = new THREE.Group();
+    
+    // Крыша веранды
+    const roofGeometry = new THREE.BoxGeometry(8.5, 0.3, 6.5);
+    const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 }); // Темно-коричневая крыша
+    const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+    roof.position.set(x, 2.5, z);
+    roof.castShadow = true;
+    verandaGroup.add(roof);
+    
+    // Опорные столбы веранды
+    for (let i = 0; i < 4; i++) {
+      const postGeometry = new THREE.CylinderGeometry(0.15, 0.15, 2.2);
+      const postMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+      const post = new THREE.Mesh(postGeometry, postMaterial);
+      const postX = (i % 2) * 7 + (x - 3.5);
+      const postZ = Math.floor(i / 2) * 5.5 + (z - 2.75);
+      post.position.set(postX, 1.1, postZ);
+      post.castShadow = true;
+      verandaGroup.add(post);
+    }
+    
+    // Бетонные стены веранды (3 стены)
+    const wallMaterial = new THREE.MeshLambertMaterial({ color: 0xD3D3D3 }); // Светло-серый бетон
+    
+    // Задняя стена
+    const backWallGeometry = new THREE.BoxGeometry(8, 2, 0.2);
+    const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
+    backWall.position.set(x, 1, z + 3);
+    backWall.castShadow = true;
+    backWall.receiveShadow = true;
+    verandaGroup.add(backWall);
+    
+    // Левая стена
+    const leftWallGeometry = new THREE.BoxGeometry(0.2, 2, 6);
+    const leftWall = new THREE.Mesh(leftWallGeometry, wallMaterial);
+    leftWall.position.set(x - 4, 1, z);
+    leftWall.castShadow = true;
+    leftWall.receiveShadow = true;
+    verandaGroup.add(leftWall);
+    
+    // Правая стена
+    const rightWallGeometry = new THREE.BoxGeometry(0.2, 2, 6);
+    const rightWall = new THREE.Mesh(rightWallGeometry, wallMaterial);
+    rightWall.position.set(x + 4, 1, z);
+    rightWall.castShadow = true;
+    rightWall.receiveShadow = true;
+    verandaGroup.add(rightWall);
+    
+    return verandaGroup;
+  }
+
+  private createVerandas(): void {
+    // Первая веранда (ближе к забору)
+    const veranda1 = this.createSingleVeranda(-7, -15);
+    this.scene.add(veranda1);
+    
+    // Вторая веранда (ближе к детскому саду)
+    const veranda2 = this.createSingleVeranda(10, -15);
+    this.scene.add(veranda2);
   }
 
   private createSideTrees(): void {
