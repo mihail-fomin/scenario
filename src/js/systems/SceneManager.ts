@@ -54,7 +54,7 @@ export class SceneManager implements SceneManagerInterface {
   
   private createEnvironment(): void {
     // Пол
-    const floorGeometry = new THREE.PlaneGeometry(50, 80);
+    const floorGeometry = new THREE.PlaneGeometry(100, 100);
     const floorMaterial = new THREE.MeshLambertMaterial({ color: 0x90EE90 });
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
@@ -80,31 +80,31 @@ export class SceneManager implements SceneManagerInterface {
   private createConcreteFence(): void {
     const fenceGroup = new THREE.Group();
     
-    // Основная часть забора - бетонные панели
-    for (let i = 0; i < 18; i++) {
+    // Основная часть забора - бетонные панели (увеличено с 18 до 30 панелей)
+    for (let i = 0; i < 30; i++) {
       const panelGeometry = new THREE.BoxGeometry(1.5, 1.242, 0.2);
       const panelMaterial = new THREE.MeshLambertMaterial({ color: 0xD3D3D3 }); // Светло-серый бетон
       const panel = new THREE.Mesh(panelGeometry, panelMaterial);
-      panel.position.set(i * 1.8 - 15.3, 0.621, -6);
+      panel.position.set(i * 1.8 - 26.1, 0.621, -6);
       panel.castShadow = true;
       panel.receiveShadow = true;
       fenceGroup.add(panel);
     }
     
-    // Верхняя часть забора - бетонная балка
-    const topBeamGeometry = new THREE.BoxGeometry(32.3, 0.3, 0.3);
+    // Верхняя часть забора - бетонная балка (увеличена ширина)
+    const topBeamGeometry = new THREE.BoxGeometry(54.1, 0.3, 0.3);
     const topBeamMaterial = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 }); // Светло-серебристый
     const topBeam = new THREE.Mesh(topBeamGeometry, topBeamMaterial);
     topBeam.position.set(0, 1.3455, -5.9);
     topBeam.castShadow = true;
     fenceGroup.add(topBeam);
     
-    // Опорные столбы
-    for (let i = 0; i < 19; i++) {
+    // Опорные столбы (увеличено количество с 19 до 31)
+    for (let i = 0; i < 31; i++) {
       const postGeometry = new THREE.BoxGeometry(0.3, 1.518, 0.3);
       const postMaterial = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 }); // Светло-серебристый
       const post = new THREE.Mesh(postGeometry, postMaterial);
-      post.position.set(i * 1.8 - 16.2, 0.759, -5.85);
+      post.position.set(i * 1.8 - 27, 0.759, -5.85);
       post.castShadow = true;
       fenceGroup.add(post);
     }
@@ -115,20 +115,20 @@ export class SceneManager implements SceneManagerInterface {
   private createKindergarten(): void {
     const kindergartenGroup = new THREE.Group();
     
-    // Основное здание (первый этаж)
-    const groundFloorGeometry = new THREE.BoxGeometry(36, 4, 10);
+    // Основное здание (первый этаж) - увеличена высота с 4 до 5
+    const groundFloorGeometry = new THREE.BoxGeometry(36, 5, 10);
     const groundFloorMaterial = new THREE.MeshLambertMaterial({ color: 0xFFF0F5 }); // Почти белый с легким розовым оттенком
     const groundFloor = new THREE.Mesh(groundFloorGeometry, groundFloorMaterial);
-    groundFloor.position.set(0, 2, -42);
+    groundFloor.position.set(0, 2.5, -42);
     groundFloor.castShadow = true;
     groundFloor.receiveShadow = true;
     kindergartenGroup.add(groundFloor);
     
-    // Второй этаж
-    const secondFloorGeometry = new THREE.BoxGeometry(36, 4, 10);
+    // Второй этаж - увеличена высота с 4 до 5
+    const secondFloorGeometry = new THREE.BoxGeometry(36, 5, 10);
     const secondFloorMaterial = new THREE.MeshLambertMaterial({ color: 0xFFF0F5 }); // Почти белый с легким розовым оттенком
     const secondFloor = new THREE.Mesh(secondFloorGeometry, secondFloorMaterial);
-    secondFloor.position.set(0, 6, -42);
+    secondFloor.position.set(0, 7.5, -42);
     secondFloor.castShadow = true;
     secondFloor.receiveShadow = true;
     kindergartenGroup.add(secondFloor);
@@ -165,49 +165,49 @@ export class SceneManager implements SceneManagerInterface {
   private createSingleVeranda(x: number, z: number): THREE.Group {
     const verandaGroup = new THREE.Group();
     
-    // Крыша веранды
+    // Крыша веранды - увеличена высота позиции
     const roofGeometry = new THREE.BoxGeometry(8.5, 0.3, 6.5);
     const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 }); // Темно-коричневая крыша
     const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-    roof.position.set(x, 2.5, z);
+    roof.position.set(x, 3.2, z);
     roof.castShadow = true;
     verandaGroup.add(roof);
     
-    // Опорные столбы веранды
+    // Опорные столбы веранды - увеличена высота с 2.2 до 2.8
     for (let i = 0; i < 4; i++) {
-      const postGeometry = new THREE.CylinderGeometry(0.15, 0.15, 2.2);
+      const postGeometry = new THREE.CylinderGeometry(0.15, 0.15, 2.8);
       const postMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
       const post = new THREE.Mesh(postGeometry, postMaterial);
       const postX = (i % 2) * 7 + (x - 3.5);
       const postZ = Math.floor(i / 2) * 5.5 + (z - 2.75);
-      post.position.set(postX, 1.1, postZ);
+      post.position.set(postX, 1.4, postZ);
       post.castShadow = true;
       verandaGroup.add(post);
     }
     
-    // Бетонные стены веранды (3 стены)
+    // Бетонные стены веранды (3 стены) - увеличена высота с 2 до 2.5
     const wallMaterial = new THREE.MeshLambertMaterial({ color: 0xD3D3D3 }); // Светло-серый бетон
     
     // Задняя стена
-    const backWallGeometry = new THREE.BoxGeometry(8, 2, 0.2);
+    const backWallGeometry = new THREE.BoxGeometry(8, 2.5, 0.2);
     const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
-    backWall.position.set(x, 1, z + 3);
+    backWall.position.set(x, 1.25, z + 3);
     backWall.castShadow = true;
     backWall.receiveShadow = true;
     verandaGroup.add(backWall);
     
     // Левая стена
-    const leftWallGeometry = new THREE.BoxGeometry(0.2, 2, 6);
+    const leftWallGeometry = new THREE.BoxGeometry(0.2, 2.5, 6);
     const leftWall = new THREE.Mesh(leftWallGeometry, wallMaterial);
-    leftWall.position.set(x - 4, 1, z);
+    leftWall.position.set(x - 4, 1.25, z);
     leftWall.castShadow = true;
     leftWall.receiveShadow = true;
     verandaGroup.add(leftWall);
     
     // Правая стена
-    const rightWallGeometry = new THREE.BoxGeometry(0.2, 2, 6);
+    const rightWallGeometry = new THREE.BoxGeometry(0.2, 2.5, 6);
     const rightWall = new THREE.Mesh(rightWallGeometry, wallMaterial);
-    rightWall.position.set(x + 4, 1, z);
+    rightWall.position.set(x + 4, 1.25, z);
     rightWall.castShadow = true;
     rightWall.receiveShadow = true;
     verandaGroup.add(rightWall);
@@ -245,34 +245,59 @@ export class SceneManager implements SceneManagerInterface {
   }
 
   private createSideTrees(): void {
-    // Несколько деревьев по бокам для атмосферы
-    for (let i = 0; i < 4; i++) {
+    // Создаем деревья вдоль забора с обеих сторон
+    const treePositions = [];
+    
+    // Левая сторона забора (отрицательные X координаты)
+    for (let i = 0; i < 8; i++) {
+      const x = -35 + (i * 4.5); // Распределяем деревья вдоль левой стороны с большим интервалом
+      const z = -8 + (Math.random() - 0.5) * 2; // Небольшое случайное смещение по Z
+      treePositions.push({ x, z, side: 'left' });
+    }
+    
+    // Правая сторона забора (положительные X координаты)
+    for (let i = 0; i < 8; i++) {
+      const x = 35 - (i * 4.5); // Распределяем деревья вдоль правой стороны с большим интервалом
+      const z = -8 + (Math.random() - 0.5) * 2; // Небольшое случайное смещение по Z
+      treePositions.push({ x, z, side: 'right' });
+    }
+    
+    // Создаем деревья в каждой позиции
+    treePositions.forEach((pos) => {
       const treeGroup = new THREE.Group();
       
+      // Случайные размеры для разнообразия
+      const trunkHeight = 3 + Math.random() * 2; // Высота ствола от 3 до 5
+      const trunkRadius = 0.2 + Math.random() * 0.2; // Радиус ствола от 0.2 до 0.4
+      const crownRadius = 1.5 + Math.random() * 1; // Радиус кроны от 1.5 до 2.5
+      
       // Ствол
-      const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.4, 4, 8);
-      const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+      const trunkGeometry = new THREE.CylinderGeometry(trunkRadius, trunkRadius * 1.2, trunkHeight, 8);
+      const trunkMaterial = new THREE.MeshLambertMaterial({ 
+        color: new THREE.Color().setHSL(0.1, 0.6, 0.3 + Math.random() * 0.2) // Разные оттенки коричневого
+      });
       const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-      trunk.position.y = 2;
+      trunk.position.y = trunkHeight / 2;
       trunk.castShadow = true;
       treeGroup.add(trunk);
       
       // Крона
-      const crownGeometry = new THREE.SphereGeometry(2, 8, 6);
-      const crownMaterial = new THREE.MeshLambertMaterial({ color: 0x228B22 });
+      const crownGeometry = new THREE.SphereGeometry(crownRadius, 8, 6);
+      const crownMaterial = new THREE.MeshLambertMaterial({ 
+        color: new THREE.Color().setHSL(0.3, 0.7, 0.3 + Math.random() * 0.3) // Разные оттенки зеленого
+      });
       const crown = new THREE.Mesh(crownGeometry, crownMaterial);
-      crown.position.y = 5;
+      crown.position.y = trunkHeight + crownRadius * 0.7;
       crown.castShadow = true;
       treeGroup.add(crown);
       
-      // Размещаем деревья по бокам
-      treeGroup.position.set(
-        i % 2 === 0 ? -15 : 15,
-        0,
-        -5 - (Math.floor(i / 2) * 5)
-      );
+      // Небольшое случайное вращение для естественности
+      treeGroup.rotation.y = Math.random() * 0.2 - 0.1;
+      
+      // Размещаем дерево
+      treeGroup.position.set(pos.x, 0, pos.z);
       this.scene.add(treeGroup);
-    }
+    });
   }
   
   public addCharacter(character: CharacterInterface): void {
