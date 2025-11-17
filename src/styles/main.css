@@ -75,6 +75,33 @@ body {
     flex-direction: column;
     gap: 8px;
     max-width: 300px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-left: 26px;
+    direction: rtl;
+    /* Стилизация скроллбара для Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(76, 175, 80, 0.5) rgba(0, 0, 0, 0.3);
+}
+
+/* Стилизация скроллбара для WebKit браузеров (Chrome, Safari, Edge) */
+#dialogue-selector::-webkit-scrollbar {
+    width: 8px;
+}
+
+#dialogue-selector::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+}
+
+#dialogue-selector::-webkit-scrollbar-thumb {
+    background: rgba(76, 175, 80, 0.5);
+    border-radius: 4px;
+}
+
+#dialogue-selector::-webkit-scrollbar-thumb:hover {
+    background: rgba(76, 175, 80, 0.7);
 }
 
 .dialogue-card {
@@ -90,6 +117,7 @@ body {
     width: 100%;
     max-width: 280px;
     position: relative;
+    direction: ltr;
 }
 
 .dialogue-card:hover {
@@ -267,6 +295,8 @@ button, .dialogue-card {
         transform: none;
         max-width: none;
         gap: 6px;
+        max-height: calc(100vh - 90px);
+        padding-left: 28px;
     }
 
     .dialogue-card {
@@ -363,6 +393,8 @@ button, .dialogue-card {
         left: 5px;
         right: 5px;
         gap: 4px;
+        max-height: calc(100vh - 70px);
+        padding-left: 28px;
     }
 
     #dialogue-info {

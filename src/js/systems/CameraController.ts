@@ -94,6 +94,22 @@ export class CameraController implements CameraControllerInterface {
   }
 
   private onWheel(event: WheelEvent): void {
+    // Проверяем, находится ли курсор над dialogue-selector
+    const dialogueSelector = document.getElementById('dialogue-selector');
+    if (dialogueSelector) {
+      const rect = dialogueSelector.getBoundingClientRect();
+      const isOverSelector = 
+        event.clientX >= rect.left && 
+        event.clientX <= rect.right && 
+        event.clientY >= rect.top && 
+        event.clientY <= rect.bottom;
+      
+      // Если скролл происходит над селектором диалогов, не обрабатываем зум
+      if (isOverSelector) {
+        return;
+      }
+    }
+    
     event.preventDefault();
     
     // Вычисляем изменение радиуса на основе направления скролла
