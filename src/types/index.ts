@@ -43,6 +43,7 @@ export interface UIElements {
   subtitles: HTMLElement;
   dialogueSelector: HTMLElement;
   dialogueInfo: HTMLElement;
+  burgerMenu: HTMLButtonElement;
 }
 
 // Типы колбэков UI

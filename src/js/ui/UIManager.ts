@@ -15,7 +15,8 @@ export class UIManager implements UIManagerInterface {
       pauseBtn: document.getElementById('pauseBtn') as HTMLButtonElement,
       subtitles: document.getElementById('subtitles') as HTMLElement,
       dialogueSelector: document.getElementById('dialogue-selector') as HTMLElement,
-      dialogueInfo: document.getElementById('dialogue-info') as HTMLElement
+      dialogueInfo: document.getElementById('dialogue-info') as HTMLElement,
+      burgerMenu: document.getElementById('burger-menu') as HTMLButtonElement
     };
     
     this.setupEventListeners();
@@ -42,9 +43,29 @@ export class UIManager implements UIManagerInterface {
         this.callbacks.onPause();
       }
     });
-    
+
+    // Обработчик для бургер-меню
+    if (this.elements.burgerMenu) {
+      addTouchSupport(this.elements.burgerMenu, () => {
+        this.toggleDialogueMenu();
+      });
+    }
 
     // Обработчик для карточек диалогов будет добавлен в updateDialogueSelector
+  }
+
+  private toggleDialogueMenu(): void {
+    if (!this.elements.dialogueSelector || !this.elements.burgerMenu) return;
+    
+    const isOpen = this.elements.dialogueSelector.classList.contains('menu-open');
+    
+    if (isOpen) {
+      this.elements.dialogueSelector.classList.remove('menu-open');
+      this.elements.burgerMenu.classList.remove('active');
+    } else {
+      this.elements.dialogueSelector.classList.add('menu-open');
+      this.elements.burgerMenu.classList.add('active');
+    }
   }
   
   public setCallbacks(callbacks: UICallbacks): void {
@@ -116,16 +137,32 @@ export class UIManager implements UIManagerInterface {
         <div class="dialogue-card-description">${dialogueSet.description}</div>
       `;
       
-      // Добавляем обработчики клика и touch для мобильных устройств
+      // Обработчик клика: на мобильных устройствах автоматически запускает диалог
       const handleCardClick = () => {
-        if (this.callbacks.onDialogueSetChange) {
-          this.callbacks.onDialogueSetChange(dialogueSet.id);
+        const isMobile = window.innerWidth <= 768;
+        
+        if (isMobile) {
+          // На мобильных устройствах автоматически запускаем диалог
+          if (this.callbacks.onDialogueStart) {
+            this.callbacks.onDialogueStart(dialogueSet.id);
+          }
+          // Закрываем меню после выбора
+          if (this.elements.dialogueSelector && this.elements.burgerMenu) {
+            this.elements.dialogueSelector.classList.remove('menu-open');
+            this.elements.burgerMenu.classList.remove('active');
+          }
+        } else {
+          // На десктопе просто меняем набор диалогов
+          if (this.callbacks.onDialogueSetChange) {
+            this.callbacks.onDialogueSetChange(dialogueSet.id);
+          }
         }
       };
 
-      // Добавляем обработчик двойного клика для автоматического запуска диалога
+      // Обработчик двойного клика для десктопа (автоматический запуск)
       const handleCardDoubleClick = () => {
-        if (this.callbacks.onDialogueStart) {
+        // Двойной клик работает только на десктопе
+        if (window.innerWidth > 768 && this.callbacks.onDialogueStart) {
           this.callbacks.onDialogueStart(dialogueSet.id);
         }
       };
