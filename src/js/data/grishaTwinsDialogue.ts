@@ -3,7 +3,7 @@ import { DialogueSet } from '@/types/index';
 export const grishaTwinsDialogueSet: DialogueSet = {
   id: 'grisha_twins_dialogue',
   title: 'Гриша и близняшки',
-  description: 'Пацаны с матом и смехом вспоминают, как Гриша постоянно возвращаясь из деревни рассказывал, что трахал сразу двух близняшек - Риту и Риму, а рассказчики ржали и не верили ему',
+  description: 'Пацаны вспоминают, как Гриша постоянно возвращаясь из деревни рассказывал, что трахал сразу двух близняшек - Риту и Риму',
   dialogues: [
     {
       speaker: 'Тихон',

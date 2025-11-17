@@ -3,7 +3,7 @@ import { DialogueSet } from '@/types/index';
 export const grishaShitDialogueSet: DialogueSet = {
   id: 'grisha_shit_dialogue',
   title: 'Гриша и говно',
-  description: 'Пацаны с матом и смехом вспоминают, как Гриша постоянно наступал в говно и везде были черкаши от его обуви',
+  description: 'Пацаны вспоминают, как Гриша постоянно наступал в говно и везде были черкаши от его обуви',
   dialogues: [
     {
       speaker: 'Тихон',
