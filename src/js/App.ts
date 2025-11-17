@@ -9,6 +9,7 @@ import { armyDialogueSet } from './data/armyDialogue.js';
 import { tikhonCharacterDialogueSet } from './data/tikhonCharacterDialogue.js';
 import { brokenLegDialogueSet } from './data/brokenLegDialogue.js';
 import { hairProblemDialogueSet } from './data/hairProblemDialogue.js';
+import { oreoChocolateDialogueSet } from './data/oreoChocolateDialogue.js';
 import { Dialogue, CharacterInterface, DialogueSystemInterface, TTSInterface, SceneManagerInterface, UIManagerInterface, DialogueSet, DialogueSetManagerInterface } from '@/types/index';
 
 export class App {
@@ -58,6 +59,7 @@ export class App {
     this.dialogueSetManager.addDialogueSet(dialogueSet2);
     this.dialogueSetManager.addDialogueSet(armyDialogueSet);
     this.dialogueSetManager.addDialogueSet(tikhonCharacterDialogueSet);
+    this.dialogueSetManager.addDialogueSet(oreoChocolateDialogueSet);
 
     // Устанавливаем первый набор как текущий
     this.dialogueSetManager.setCurrentDialogueSet('dialogue1');
