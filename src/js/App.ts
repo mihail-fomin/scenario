@@ -84,8 +84,6 @@ export class App {
   
   private setupUI(): void {
     this.uiManager.setCallbacks({
-      onStart: () => this.startDialogue(),
-      onPause: () => this.pauseDialogue(),
       onDialogueSetChange: (dialogueSetId: string) => this.changeDialogueSet(dialogueSetId),
       onDialogueStart: (dialogueSetId: string) => this.startDialogueFromCard(dialogueSetId)
     });
@@ -135,21 +133,6 @@ export class App {
   private startDialogue(): void {
     if (this.dialogueSystem) {
       this.dialogueSystem.start();
-      this.uiManager.setPlayingState(true, false);
-    }
-  }
-  
-  private pauseDialogue(): void {
-    if (this.dialogueSystem) {
-      this.dialogueSystem.pause();
-      const isPaused = this.dialogueSystem.getIsPaused();
-      this.uiManager.setPlayingState(true, isPaused);
-      
-      if (isPaused) {
-        this.tts.pause();
-      } else {
-        this.tts.resume();
-      }
     }
   }
   
@@ -168,7 +151,6 @@ export class App {
   
   private endDialogue(): void {
     this.tts.stop();
-    this.uiManager.setReadyState();
     this.uiManager.hideSubtitles();
   }
 
@@ -186,7 +168,6 @@ export class App {
         this.dialogueSystem.setDialogueSet(newDialogueSet);
         this.uiManager.setDialogueInfo(newDialogueSet.title, newDialogueSet.description);
         this.uiManager.setActiveDialogueCard(dialogueSetId);
-        this.uiManager.setReadyState();
         this.uiManager.hideSubtitles();
       }
     }

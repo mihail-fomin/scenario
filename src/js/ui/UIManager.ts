@@ -3,16 +3,12 @@ import { UIManagerInterface, UIElements, UICallbacks, DialogueSet } from '@/type
 export class UIManager implements UIManagerInterface {
   private elements: UIElements;
   private callbacks: UICallbacks = {
-    onStart: undefined,
-    onPause: undefined,
     onDialogueSetChange: undefined,
     onDialogueStart: undefined
   };
   
   constructor() {
     this.elements = {
-      startBtn: document.getElementById('startBtn') as HTMLButtonElement,
-      pauseBtn: document.getElementById('pauseBtn') as HTMLButtonElement,
       subtitles: document.getElementById('subtitles') as HTMLElement,
       dialogueSelector: document.getElementById('dialogue-selector') as HTMLElement,
       dialogueInfo: document.getElementById('dialogue-info') as HTMLElement,
@@ -31,18 +27,6 @@ export class UIManager implements UIManagerInterface {
         callback();
       });
     };
-
-    addTouchSupport(this.elements.startBtn, () => {
-      if (this.callbacks.onStart) {
-        this.callbacks.onStart();
-      }
-    });
-    
-    addTouchSupport(this.elements.pauseBtn, () => {
-      if (this.callbacks.onPause) {
-        this.callbacks.onPause();
-      }
-    });
 
     // Обработчик для бургер-меню
     if (this.elements.burgerMenu) {
@@ -83,24 +67,6 @@ export class UIManager implements UIManagerInterface {
   
   public hideSubtitles(): void {
     this.elements.subtitles.classList.remove('show');
-  }
-  
-  
-  public setPlayingState(isPlaying: boolean, isPaused: boolean): void {
-    this.elements.startBtn.disabled = isPlaying;
-    this.elements.pauseBtn.disabled = !isPlaying;
-    
-    if (isPaused) {
-      this.elements.pauseBtn.textContent = 'Продолжить';
-    } else {
-      this.elements.pauseBtn.textContent = 'Пауза';
-    }
-  }
-  
-  public setReadyState(): void {
-    this.elements.startBtn.disabled = false;
-    this.elements.pauseBtn.disabled = true;
-    this.elements.pauseBtn.textContent = 'Пауза';
   }
   
   public showError(message: string): void {

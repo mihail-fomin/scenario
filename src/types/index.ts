@@ -38,8 +38,6 @@ export interface CharacterInterface {
 
 // Типы UI элементов
 export interface UIElements {
-  startBtn: HTMLButtonElement;
-  pauseBtn: HTMLButtonElement;
   subtitles: HTMLElement;
   dialogueSelector: HTMLElement;
   dialogueInfo: HTMLElement;
@@ -48,8 +46,6 @@ export interface UIElements {
 
 // Типы колбэков UI
 export interface UICallbacks {
-  onStart?: () => void;
-  onPause?: () => void;
   onDialogueSetChange?: (dialogueSetId: string) => void;
   onDialogueStart?: (dialogueSetId: string) => void;
 }
@@ -150,8 +146,6 @@ export interface UIManagerInterface {
   setCallbacks(callbacks: UICallbacks): void;
   showSubtitles(text: string, speakerName?: string): void;
   hideSubtitles(): void;
-  setPlayingState(isPlaying: boolean, isPaused: boolean): void;
-  setReadyState(): void;
   showError(message: string): void;
   showProgress(current: number, total: number): void;
   updateDialogueSelector(dialogueSets: DialogueSet[], currentId: string): void;
