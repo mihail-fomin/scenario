@@ -44,8 +44,8 @@ export class SceneManager implements SceneManagerInterface {
     const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
     this.scene.add(ambientLight);
     
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(5, 10, 5);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    directionalLight.position.set(5, 10, 0);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
@@ -67,9 +67,13 @@ export class SceneManager implements SceneManagerInterface {
     // Создание детского сада
     this.createKindergarten();
     
-    // Создание панельного дома (5 этажей, 3 подъезда)
-    this.createPanelHouse(9, 5);
+    // Создание панельного дома (9 этажей, 7 подъездов)
+    this.createPanelHouse(9, 7, { x: -45, z: 0 });
     
+    // Создание панельного дома (5 этажей, 7 подъездов)
+    this.createPanelHouse(5, 7, { x: 45, z: 0 });
+
+
     // Создание веранд между забором и детским садом
     this.createVerandas();
     
@@ -83,7 +87,7 @@ export class SceneManager implements SceneManagerInterface {
   private createConcreteFence(): void {
     const fenceGroup = new THREE.Group();
     
-    // Основная часть забора - бетонные панели (увеличено с 18 до 30 панелей)
+    // Основная часть забора - бетонные панели
     for (let i = 0; i < 30; i++) {
       const panelGeometry = new THREE.BoxGeometry(1.5, 1.242, 0.2);
       const panelMaterial = new THREE.MeshLambertMaterial({ color: 0xD3D3D3 }); // Светло-серый бетон
@@ -165,7 +169,7 @@ export class SceneManager implements SceneManagerInterface {
     this.scene.add(kindergartenGroup);
   }
 
-  private createPanelHouse(floors: number, entrances: number): void {
+  private createPanelHouse(floors: number, entrances: number, position: { x: number, z: number } = { x: 0, z: 0 }): void {
     const houseGroup = new THREE.Group();
 
     // Параметры дома
@@ -174,10 +178,6 @@ export class SceneManager implements SceneManagerInterface {
     const houseDepth = 12; // Глубина дома
     const totalHeight = floors * floorHeight;
     const totalWidth = entrances * entranceWidth;
-    
-    // Позиция дома - слева от детского сада (будет применена после поворота)
-    const houseX = -45;
-    const houseZ = 0;
     
     // Основная структура дома - панельные блоки
     const panelMaterial = new THREE.MeshLambertMaterial({ color: 0xE0E0E0 }); // Светло-серый цвет панелей
@@ -194,7 +194,7 @@ export class SceneManager implements SceneManagerInterface {
       floorMesh.receiveShadow = true;
       houseGroup.add(floorMesh);
       
-      // Окна на каждом этаже для каждого подъезда
+      // Окна на каждом этаже для каждого подъезда (передняя сторона)
       for (let entrance = 0; entrance < entrances; entrance++) {
         const entranceX = (entrance - (entrances - 1) / 2) * entranceWidth;
         
@@ -211,6 +211,28 @@ export class SceneManager implements SceneManagerInterface {
             entranceX + windowOffsetX, 
             floorY, 
             -houseDepth / 2
+          );
+          houseGroup.add(window);
+        }
+      }
+      
+      // Окна на каждом этаже для каждого подъезда (задняя сторона)
+      for (let entrance = 0; entrance < entrances; entrance++) {
+        const entranceX = (entrance - (entrances - 1) / 2) * entranceWidth;
+        
+        // По 2 окна на подъезд (симметрично по бокам от центра подъезда)
+        for (let windowIndex = 0; windowIndex < 2; windowIndex++) {
+          const windowOffsetX = (windowIndex === 0 ? -2 : 2);
+          const windowGeometry = new THREE.BoxGeometry(1.5, 2, 0.3);
+          const windowMaterial = new THREE.MeshLambertMaterial({ 
+            color: 0x1a4d7a, 
+            emissive: 0x0a1f33 
+          });
+          const window = new THREE.Mesh(windowGeometry, windowMaterial);
+          window.position.set(
+            entranceX + windowOffsetX, 
+            floorY, 
+            houseDepth / 2
           );
           houseGroup.add(window);
         }
@@ -238,7 +260,7 @@ export class SceneManager implements SceneManagerInterface {
       houseGroup.add(canopy);
     }
     
-    // Балконы на каждом этаже (кроме первого)
+    // Балконы на каждом этаже (кроме первого) - передняя сторона
     for (let floor = 1; floor < floors; floor++) {
       const floorY = floor * floorHeight;
       
@@ -264,6 +286,32 @@ export class SceneManager implements SceneManagerInterface {
       }
     }
     
+    // Балконы на каждом этаже (кроме первого) - задняя сторона
+    for (let floor = 1; floor < floors; floor++) {
+      const floorY = floor * floorHeight;
+      
+      for (let entrance = 0; entrance < entrances; entrance++) {
+        const entranceX = (entrance - (entrances - 1) / 2) * entranceWidth;
+        
+        // Платформа балкона
+        const balconyPlatformGeometry = new THREE.BoxGeometry(1.8, 0.2, 1.2);
+        const balconyPlatformMaterial = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 });
+        const balconyPlatform = new THREE.Mesh(balconyPlatformGeometry, balconyPlatformMaterial);
+        balconyPlatform.position.set(entranceX, floorY, houseDepth / 2 + 0.6);
+        balconyPlatform.castShadow = true;
+        balconyPlatform.receiveShadow = true;
+        houseGroup.add(balconyPlatform);
+        
+        // Ограждение балкона
+        const railingGeometry = new THREE.BoxGeometry(1.8, 0.8, 0.1);
+        const railingMaterial = new THREE.MeshLambertMaterial({ color: 0x808080 });
+        const railing = new THREE.Mesh(railingGeometry, railingMaterial);
+        railing.position.set(entranceX, floorY + 0.5, houseDepth / 2 + 1.15);
+        railing.castShadow = true;
+        houseGroup.add(railing);
+      }
+    }
+    
     // Крыша
     const roofGeometry = new THREE.BoxGeometry(totalWidth + 1, 0.5, houseDepth + 1);
     const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x696969 }); // Темно-серый
@@ -277,7 +325,7 @@ export class SceneManager implements SceneManagerInterface {
     houseGroup.rotation.y = - Math.PI / 2;
     
     // Перемещение группы в нужное место после поворота
-    houseGroup.position.set(houseX, 0, houseZ);
+    houseGroup.position.set(position.x, 0, position.z);
     
     this.scene.add(houseGroup);
   }
