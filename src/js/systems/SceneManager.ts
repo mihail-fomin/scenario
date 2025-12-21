@@ -80,7 +80,7 @@ export class SceneManager implements SceneManagerInterface {
     this.createPanelHouse(9, 7, { x: -45, z: 0 });
     
     // Создание панельного дома (5 этажей, 7 подъездов)
-    this.createPanelHouse(5, 7, { x: 45, z: 0 });
+    this.createPanelHouse(5, 7, { x: 45, z: -20 });
 
 
     // Создание веранд между забором и детским садом
