@@ -49,6 +49,15 @@ export class SceneManager implements SceneManagerInterface {
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
+    
+    // Настройка области камеры теней для корректного отображения теней
+    directionalLight.shadow.camera.left = -60;
+    directionalLight.shadow.camera.right = 60;
+    directionalLight.shadow.camera.top = 60;
+    directionalLight.shadow.camera.bottom = -60;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 100;
+    
     this.scene.add(directionalLight);
   }
   
