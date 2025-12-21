@@ -73,10 +73,6 @@ export class UIManager implements UIManagerInterface {
     console.error('UI Error:', message);
   }
   
-  public showProgress(current: number, total: number): void {
-    // Прогресс теперь отображается в субтитрах
-    console.log(`Прогресс: ${current} из ${total}`);
-  }
 
   public updateDialogueSelector(dialogueSets: DialogueSet[], currentId: string): void {
     if (!this.elements.dialogueSelector) {

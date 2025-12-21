@@ -45,7 +45,7 @@ export class SceneManager implements SceneManagerInterface {
     this.scene.add(ambientLight);
     
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
-    directionalLight.position.set(5, 10, 0);
+    directionalLight.position.set(-5, 10, -4);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;

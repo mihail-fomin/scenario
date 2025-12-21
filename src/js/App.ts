@@ -118,10 +118,10 @@ export class App {
         console.log('Конец речи персонажа:', character.name);
         // Автоматический переход к следующей реплике через 500мс
         setTimeout(() => {
-          if (this.dialogueSystem && this.dialogueSystem.getIsPlaying() && !this.dialogueSystem.getIsPaused()) {
+          if (this.dialogueSystem?.getIsPlaying()) {
             this.nextDialogue();
           }
-        }, 500);
+        }, 200);
       },
       (error: string) => {
         console.error('Ошибка TTS:', error);
@@ -142,9 +142,6 @@ export class App {
       
       if (!this.dialogueSystem.getIsPlaying()) {
         this.endDialogue();
-      } else {
-        const progress = this.dialogueSystem.getProgress();
-        this.uiManager.showProgress(progress.current, progress.total);
       }
     }
   }
