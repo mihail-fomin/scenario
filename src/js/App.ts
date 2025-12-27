@@ -12,6 +12,7 @@ import { hairProblemDialogueSet } from './data/hairProblemDialogue.js';
 import { oreoChocolateDialogueSet } from './data/oreoChocolateDialogue.js';
 import { grishaShitDialogueSet } from './data/grishaShitDialogue.js';
 import { grishaTwinsDialogueSet } from './data/grishaTwinsDialogue.js';
+import { policeStationDialogueSet } from './data/policeStationDialogue.js';
 
 import { Dialogue, CharacterInterface, DialogueSystemInterface, TTSInterface, SceneManagerInterface, UIManagerInterface, DialogueSet, DialogueSetManagerInterface } from '@/types/index';
 
@@ -65,6 +66,7 @@ export class App {
     this.dialogueSetManager.addDialogueSet(oreoChocolateDialogueSet);
     this.dialogueSetManager.addDialogueSet(grishaShitDialogueSet);
     this.dialogueSetManager.addDialogueSet(grishaTwinsDialogueSet);
+    this.dialogueSetManager.addDialogueSet(policeStationDialogueSet);
 
     // Устанавливаем первый набор как текущий
     this.dialogueSetManager.setCurrentDialogueSet('dialogue1');

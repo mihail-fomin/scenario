@@ -64,7 +64,7 @@ export class SceneManager implements SceneManagerInterface {
   
   private createEnvironment(): void {
     // Пол
-    const floorGeometry = new THREE.PlaneGeometry(100, 100);
+    const floorGeometry = new THREE.PlaneGeometry(10000, 10000);
     const floorMaterial = new THREE.MeshLambertMaterial({ color: 0x90EE90 });
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
@@ -116,7 +116,7 @@ export class SceneManager implements SceneManagerInterface {
     topBeam.castShadow = true;
     fenceGroup.add(topBeam);
     
-    // Опорные столбы (увеличено количество с 19 до 31)
+    // Опорные столбы
     for (let i = 0; i < 31; i++) {
       const postGeometry = new THREE.BoxGeometry(0.3, 1.518, 0.3);
       const postMaterial = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 }); // Светло-серебристый
@@ -132,7 +132,7 @@ export class SceneManager implements SceneManagerInterface {
   private createKindergarten(): void {
     const kindergartenGroup = new THREE.Group();
     
-    // Основное здание (первый этаж) - увеличена высота с 4 до 5
+    // Основное здание (первый этаж)
     const groundFloorGeometry = new THREE.BoxGeometry(36, 5, 10);
     const groundFloorMaterial = new THREE.MeshLambertMaterial({ color: 0xFFF0F5 }); // Почти белый с легким розовым оттенком
     const groundFloor = new THREE.Mesh(groundFloorGeometry, groundFloorMaterial);
@@ -141,7 +141,7 @@ export class SceneManager implements SceneManagerInterface {
     groundFloor.receiveShadow = true;
     kindergartenGroup.add(groundFloor);
     
-    // Второй этаж - увеличена высота с 4 до 5
+    // Второй этаж
     const secondFloorGeometry = new THREE.BoxGeometry(36, 5, 10);
     const secondFloorMaterial = new THREE.MeshLambertMaterial({ color: 0xFFF0F5 }); // Почти белый с легким розовым оттенком
     const secondFloor = new THREE.Mesh(secondFloorGeometry, secondFloorMaterial);
