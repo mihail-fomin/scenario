@@ -4,7 +4,8 @@ import { resolve } from 'path';
 export default defineConfig({
   server: {
     port: 3001,
-    open: true
+    open: true,
+    host: true,
   },
   build: {
     outDir: 'dist',
