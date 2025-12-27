@@ -72,7 +72,6 @@ export class UIManager implements UIManagerInterface {
   public showError(message: string): void {
     console.error('UI Error:', message);
   }
-  
 
   public updateDialogueSelector(dialogueSets: DialogueSet[], currentId: string): void {
     if (!this.elements.dialogueSelector) {

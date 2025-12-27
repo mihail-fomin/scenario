@@ -147,7 +147,6 @@ export interface UIManagerInterface {
   showSubtitles(text: string, speakerName?: string): void;
   hideSubtitles(): void;
   showError(message: string): void;
-  showProgress(current: number, total: number): void;
   updateDialogueSelector(dialogueSets: DialogueSet[], currentId: string): void;
   setDialogueInfo(title: string, description: string): void;
   setActiveDialogueCard(dialogueId: string): void;
