@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { SceneManagerInterface, CharacterInterface } from '@/types/index';
 import { CameraController } from './CameraController.js';
+import { Window } from '../classes/Window.js';
 
 export class SceneManager implements SceneManagerInterface {
   private scene!: THREE.Scene;
@@ -169,6 +170,49 @@ export class SceneManager implements SceneManagerInterface {
     this.scene.add(kindergartenGroup);
   }
 
+  private createFloorWindows(
+    houseGroup: THREE.Group, 
+    floorY: number, 
+    entrances: number, 
+    entranceWidth: number, 
+    houseDepth: number, 
+    panesPerWindow: number = 2
+  ): void {
+    // Окна на передней стороне
+    for (let entrance = 0; entrance < entrances; entrance++) {
+      const entranceX = (entrance - (entrances - 1) / 2) * entranceWidth;
+      
+      // По 2 окна на подъезд (симметрично по бокам от центра подъезда)
+      for (let windowIndex = 0; windowIndex < 2; windowIndex++) {
+        const windowOffsetX = (windowIndex === 0 ? -2 : 2); // Увеличено расстояние между окнами
+        const window = new Window(panesPerWindow);
+        window.setPosition(
+          entranceX + windowOffsetX, 
+          floorY, 
+          -houseDepth / 2
+        );
+        houseGroup.add(window.getGroup());
+      }
+    }
+    
+    // Окна на задней стороне
+    for (let entrance = 0; entrance < entrances; entrance++) {
+      const entranceX = (entrance - (entrances - 1) / 2) * entranceWidth;
+      
+      // По 2 окна на подъезд (симметрично по бокам от центра подъезда)
+      for (let windowIndex = 0; windowIndex < 2; windowIndex++) {
+        const windowOffsetX = (windowIndex === 0 ? -2 : 2);
+        const window = new Window(panesPerWindow);
+        window.setPosition(
+          entranceX + windowOffsetX, 
+          floorY, 
+          houseDepth / 2
+        );
+        houseGroup.add(window.getGroup());
+      }
+    }
+  }
+
   private createPanelHouse(floors: number, entrances: number, position: { x: number, z: number } = { x: 0, z: 0 }): void {
     const houseGroup = new THREE.Group();
 
@@ -194,49 +238,8 @@ export class SceneManager implements SceneManagerInterface {
       floorMesh.receiveShadow = true;
       houseGroup.add(floorMesh);
       
-      // Окна на каждом этаже для каждого подъезда (передняя сторона)
-      for (let entrance = 0; entrance < entrances; entrance++) {
-        const entranceX = (entrance - (entrances - 1) / 2) * entranceWidth;
-        
-        // По 2 окна на подъезд (симметрично по бокам от центра подъезда)
-        for (let windowIndex = 0; windowIndex < 2; windowIndex++) {
-          const windowOffsetX = (windowIndex === 0 ? -2 : 2); // Увеличено расстояние между окнами
-          const windowGeometry = new THREE.BoxGeometry(1.5, 2, 0.3);
-          const windowMaterial = new THREE.MeshLambertMaterial({ 
-            color: 0x1a4d7a, 
-            emissive: 0x0a1f33 
-          });
-          const window = new THREE.Mesh(windowGeometry, windowMaterial);
-          window.position.set(
-            entranceX + windowOffsetX, 
-            floorY, 
-            -houseDepth / 2
-          );
-          houseGroup.add(window);
-        }
-      }
-      
-      // Окна на каждом этаже для каждого подъезда (задняя сторона)
-      for (let entrance = 0; entrance < entrances; entrance++) {
-        const entranceX = (entrance - (entrances - 1) / 2) * entranceWidth;
-        
-        // По 2 окна на подъезд (симметрично по бокам от центра подъезда)
-        for (let windowIndex = 0; windowIndex < 2; windowIndex++) {
-          const windowOffsetX = (windowIndex === 0 ? -2 : 2);
-          const windowGeometry = new THREE.BoxGeometry(1.5, 2, 0.3);
-          const windowMaterial = new THREE.MeshLambertMaterial({ 
-            color: 0x1a4d7a, 
-            emissive: 0x0a1f33 
-          });
-          const window = new THREE.Mesh(windowGeometry, windowMaterial);
-          window.position.set(
-            entranceX + windowOffsetX, 
-            floorY, 
-            houseDepth / 2
-          );
-          houseGroup.add(window);
-        }
-      }
+      // Окна на каждом этаже для каждого подъезда (передняя и задняя стороны)
+      this.createFloorWindows(houseGroup, floorY, entrances, entranceWidth, houseDepth, 2);
     }
     
     // Подъезды с дверями и углублениями (только на первом этаже)
