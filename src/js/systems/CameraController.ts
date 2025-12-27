@@ -32,6 +32,15 @@ export class CameraController implements CameraControllerInterface {
   private lastMouseY: number = 0;
   private sensitivity: number = CAMERA_SETTINGS.SENSITIVITY;
   
+  // Настройки touch-управления
+  private touchSensitivity: number = CAMERA_SETTINGS.SENSITIVITY * 3; // Немного выше чувствительность для touch
+  private lastTouchX: number = 0;
+  private lastTouchY: number = 0;
+  private isTouching: boolean = false;
+  private initialPinchDistance: number = 0;
+  private lastPinchDistance: number = 0;
+  private isPinching: boolean = false;
+  
   // Таймер для автоматического возврата к вращению
   private lastInteractionTime: number = 0;
   private autoReturnDelay: number = CAMERA_SETTINGS.AUTO_RETURN_DELAY;
@@ -55,6 +64,12 @@ export class CameraController implements CameraControllerInterface {
     
     // Обработчик скролла для зума
     document.addEventListener('wheel', this.onWheel.bind(this));
+    
+    // Обработчики touch для мобильных устройств
+    document.addEventListener('touchstart', this.onTouchStart.bind(this), { passive: false });
+    document.addEventListener('touchmove', this.onTouchMove.bind(this), { passive: false });
+    document.addEventListener('touchend', this.onTouchEnd.bind(this), { passive: false });
+    document.addEventListener('touchcancel', this.onTouchEnd.bind(this), { passive: false });
     
     // Обработчики для предотвращения контекстного меню
     document.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -125,6 +140,108 @@ export class CameraController implements CameraControllerInterface {
     this.lastInteractionTime = Date.now();
   }
 
+  private onTouchStart(event: TouchEvent): void {
+    // Проверяем, находится ли касание над dialogue-selector
+    const dialogueSelector = document.getElementById('dialogue-selector');
+    if (dialogueSelector && event.touches.length > 0) {
+      const rect = dialogueSelector.getBoundingClientRect();
+      const touch = event.touches[0];
+      const isOverSelector = 
+        touch.clientX >= rect.left && 
+        touch.clientX <= rect.right && 
+        touch.clientY >= rect.top && 
+        touch.clientY <= rect.bottom;
+      
+      // Если касание происходит над селектором диалогов, не обрабатываем управление камерой
+      if (isOverSelector) {
+        return;
+      }
+    }
+
+    if (event.touches.length === 1) {
+      // Одно касание - вращение камеры
+      const touch = event.touches[0];
+      this.lastTouchX = touch.clientX;
+      this.lastTouchY = touch.clientY;
+      this.isTouching = true;
+      this.enableManualControl();
+    } else if (event.touches.length === 2) {
+      // Два касания - pinch zoom
+      const touch1 = event.touches[0];
+      const touch2 = event.touches[1];
+      this.initialPinchDistance = this.getTouchDistance(touch1, touch2);
+      this.lastPinchDistance = this.initialPinchDistance;
+      this.isPinching = true;
+      this.isTouching = false; // Отключаем вращение при pinch
+      this.enableManualControl();
+    }
+  }
+
+  private onTouchMove(event: TouchEvent): void {
+    if (event.touches.length === 1 && this.isTouching && !this.isPinching) {
+      // Вращение камеры одним пальцем
+      const touch = event.touches[0];
+      const deltaX = touch.clientX - this.lastTouchX;
+      const deltaY = touch.clientY - this.lastTouchY;
+      
+      // Обновляем углы вращения
+      this.mouseX += deltaX * this.touchSensitivity;
+      this.mouseY += deltaY * this.touchSensitivity;
+      
+      // Ограничиваем вертикальное вращение
+      this.mouseY = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.mouseY));
+      
+      this.lastTouchX = touch.clientX;
+      this.lastTouchY = touch.clientY;
+      this.lastInteractionTime = Date.now();
+      
+      event.preventDefault();
+    } else if (event.touches.length === 2 && this.isPinching) {
+      // Приближение/отдаление двумя пальцами
+      const touch1 = event.touches[0];
+      const touch2 = event.touches[1];
+      const currentDistance = this.getTouchDistance(touch1, touch2);
+      
+      // Вычисляем изменение расстояния
+      const distanceDelta = currentDistance - this.lastPinchDistance;
+      
+      // Масштабируем изменение для плавного зума
+      const zoomFactor = distanceDelta * 0.1; // Коэффициент для плавности
+      this.targetRadius = Math.max(
+        CAMERA_SETTINGS.MIN_RADIUS,
+        Math.min(CAMERA_SETTINGS.MAX_RADIUS, this.targetRadius - zoomFactor)
+      );
+      
+      this.lastPinchDistance = currentDistance;
+      this.lastInteractionTime = Date.now();
+      
+      event.preventDefault();
+    }
+  }
+
+  private onTouchEnd(event: TouchEvent): void {
+    if (event.touches.length === 0) {
+      // Все касания завершены
+      this.isTouching = false;
+      this.isPinching = false;
+      this.initialPinchDistance = 0;
+      this.lastPinchDistance = 0;
+    } else if (event.touches.length === 1 && this.isPinching) {
+      // Переход от pinch к одному касанию
+      const touch = event.touches[0];
+      this.lastTouchX = touch.clientX;
+      this.lastTouchY = touch.clientY;
+      this.isPinching = false;
+      this.isTouching = true;
+    }
+  }
+
+  private getTouchDistance(touch1: Touch, touch2: Touch): number {
+    const dx = touch2.clientX - touch1.clientX;
+    const dy = touch2.clientY - touch1.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
   public enableManualControl(): void {
     this.isManualControl = true;
     this.autoRotation = false;
@@ -150,7 +267,8 @@ export class CameraController implements CameraControllerInterface {
     const currentTime = Date.now();
     
     // Проверяем, нужно ли вернуться к автоматическому вращению
-    if (this.isManualControl && !this.isMouseDown && 
+    // Учитываем как мышь, так и touch-события
+    if (this.isManualControl && !this.isMouseDown && !this.isTouching && !this.isPinching &&
         currentTime - this.lastInteractionTime > this.autoReturnDelay) {
       this.disableManualControl();
     }
@@ -218,5 +336,9 @@ export class CameraController implements CameraControllerInterface {
     document.removeEventListener('mousemove', this.onMouseMove.bind(this));
     document.removeEventListener('mouseup', this.onMouseUp.bind(this));
     document.removeEventListener('wheel', this.onWheel.bind(this));
+    document.removeEventListener('touchstart', this.onTouchStart.bind(this));
+    document.removeEventListener('touchmove', this.onTouchMove.bind(this));
+    document.removeEventListener('touchend', this.onTouchEnd.bind(this));
+    document.removeEventListener('touchcancel', this.onTouchEnd.bind(this));
   }
 }

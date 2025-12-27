@@ -12,6 +12,12 @@ body {
     position: relative;
     width: 100vw;
     height: 100vh;
+    touch-action: none; /* Отключаем стандартные жесты браузера для управления камерой */
+    -webkit-touch-callout: none; /* Отключаем вызов контекстного меню на iOS */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 #ui {
