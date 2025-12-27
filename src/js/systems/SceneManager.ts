@@ -46,10 +46,19 @@ export class SceneManager implements SceneManagerInterface {
     this.scene.add(ambientLight);
     
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
-    directionalLight.position.set(5, 10, 0);
+    directionalLight.position.set(-5, 10, -4);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
+    
+    // Настройка области камеры теней для корректного отображения теней
+    directionalLight.shadow.camera.left = -60;
+    directionalLight.shadow.camera.right = 60;
+    directionalLight.shadow.camera.top = 60;
+    directionalLight.shadow.camera.bottom = -60;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 100;
+    
     this.scene.add(directionalLight);
   }
   
@@ -72,7 +81,7 @@ export class SceneManager implements SceneManagerInterface {
     this.createPanelHouse(9, 7, { x: -45, z: 0 });
     
     // Создание панельного дома (5 этажей, 7 подъездов)
-    this.createPanelHouse(5, 7, { x: 45, z: 0 });
+    this.createPanelHouse(5, 7, { x: 45, z: -20 });
 
 
     // Создание веранд между забором и детским садом
