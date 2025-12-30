@@ -78,10 +78,13 @@ export class SceneManager implements SceneManagerInterface {
     this.createKindergarten();
     
     // Создание панельного дома (9 этажей, 7 подъездов)
-    this.createPanelHouse(9, 7, { x: -45, z: 0 });
+    this.createPanelHouse(9, 7, { x: -55, z: 0 }, - Math.PI / 2);
     
     // Создание панельного дома (5 этажей, 7 подъездов)
-    this.createPanelHouse(5, 7, { x: 45, z: -20 });
+    this.createPanelHouse(5, 7, { x: 45, z: -20 }, -Math.PI / 2);
+
+    // Создание панельного дома (9 этажей, 3 подъездов)
+    this.createPanelHouse(9, 3, { x: -30, z: 90 }, Math.PI);
 
 
     // Создание веранд между забором и детским садом
@@ -96,7 +99,7 @@ export class SceneManager implements SceneManagerInterface {
 
   private createConcreteFence(): void {
     const fenceGroup = new THREE.Group();
-    
+
     // Основная часть забора - бетонные панели
     for (let i = 0; i < 30; i++) {
       const panelGeometry = new THREE.BoxGeometry(1.5, 1.242, 0.2);
@@ -107,7 +110,7 @@ export class SceneManager implements SceneManagerInterface {
       panel.receiveShadow = true;
       fenceGroup.add(panel);
     }
-    
+
     // Верхняя часть забора - бетонная балка (увеличена ширина)
     const topBeamGeometry = new THREE.BoxGeometry(54.1, 0.3, 0.3);
     const topBeamMaterial = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 }); // Светло-серебристый
@@ -115,7 +118,7 @@ export class SceneManager implements SceneManagerInterface {
     topBeam.position.set(0, 1.3455, -5.9);
     topBeam.castShadow = true;
     fenceGroup.add(topBeam);
-    
+
     // Опорные столбы
     for (let i = 0; i < 31; i++) {
       const postGeometry = new THREE.BoxGeometry(0.3, 1.518, 0.3);
@@ -125,7 +128,7 @@ export class SceneManager implements SceneManagerInterface {
       post.castShadow = true;
       fenceGroup.add(post);
     }
-    
+
     this.scene.add(fenceGroup);
   }
 
@@ -140,7 +143,7 @@ export class SceneManager implements SceneManagerInterface {
     groundFloor.castShadow = true;
     groundFloor.receiveShadow = true;
     kindergartenGroup.add(groundFloor);
-    
+
     // Второй этаж
     const secondFloorGeometry = new THREE.BoxGeometry(36, 5, 10);
     const secondFloorMaterial = new THREE.MeshLambertMaterial({ color: 0xFFF0F5 }); // Почти белый с легким розовым оттенком
@@ -149,8 +152,7 @@ export class SceneManager implements SceneManagerInterface {
     secondFloor.castShadow = true;
     secondFloor.receiveShadow = true;
     kindergartenGroup.add(secondFloor);
-    
-    
+
     // Окна первого этажа (передняя сторона)
     for (let i = 0; i < 6; i++) {
       const windowGeometry = new THREE.BoxGeometry(3, 2, 0.5);
@@ -159,7 +161,7 @@ export class SceneManager implements SceneManagerInterface {
       window.position.set(i * 6.5 - 16.25, 2, -36.5);
       kindergartenGroup.add(window);
     }
-    
+
     // Окна второго этажа (передняя сторона)
     for (let i = 0; i < 6; i++) {
       const windowGeometry = new THREE.BoxGeometry(3, 2, 0.5);
@@ -168,7 +170,7 @@ export class SceneManager implements SceneManagerInterface {
       window.position.set(i * 6.5 - 16.25, 6, -36.5);
       kindergartenGroup.add(window);
     }
-    
+
     // Дверь
     const doorGeometry = new THREE.BoxGeometry(1.5, 3, 0.1);
     const doorMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
@@ -190,10 +192,10 @@ export class SceneManager implements SceneManagerInterface {
     // Окна на передней стороне
     for (let entrance = 0; entrance < entrances; entrance++) {
       const entranceX = (entrance - (entrances - 1) / 2) * entranceWidth;
-      
+
       // По 2 окна на подъезд (симметрично по бокам от центра подъезда)
       for (let windowIndex = 0; windowIndex < 2; windowIndex++) {
-        const windowOffsetX = (windowIndex === 0 ? -2 : 2); // Увеличено расстояние между окнами
+        const windowOffsetX = (windowIndex === 0 ? -2.5 : 2.5);
         const window = new Window(panesPerWindow);
         window.setPosition(
           entranceX + windowOffsetX, 
@@ -203,31 +205,38 @@ export class SceneManager implements SceneManagerInterface {
         houseGroup.add(window.getGroup());
       }
     }
-    
+
     // Окна на задней стороне
     for (let entrance = 0; entrance < entrances; entrance++) {
       const entranceX = (entrance - (entrances - 1) / 2) * entranceWidth;
-      
+
       // По 2 окна на подъезд (симметрично по бокам от центра подъезда)
       for (let windowIndex = 0; windowIndex < 2; windowIndex++) {
-        const windowOffsetX = (windowIndex === 0 ? -2 : 2);
+        const windowOffsetX = (windowIndex === 0 ? -2.5 : 2.5);
         const window = new Window(panesPerWindow);
+
         window.setPosition(
-          entranceX + windowOffsetX, 
-          floorY, 
+          entranceX + windowOffsetX,
+          floorY,
           houseDepth / 2
         );
+
         houseGroup.add(window.getGroup());
       }
     }
   }
 
-  private createPanelHouse(floors: number, entrances: number, position: { x: number, z: number } = { x: 0, z: 0 }): void {
+  private createPanelHouse(
+    floors: number,
+    entrances: number,
+    position: { x: number, z: number } = { x: 0, z: 0 },
+    rotation: number = 0
+): void {
     const houseGroup = new THREE.Group();
 
     // Параметры дома
     const floorHeight = 3; // Высота одного этажа
-    const entranceWidth = 12; // Ширина одного подъезда
+    const entranceWidth = 17; // Ширина одного подъезда
     const houseDepth = 12; // Глубина дома
     const totalHeight = floors * floorHeight;
     const totalWidth = entrances * entranceWidth;
@@ -334,11 +343,11 @@ export class SceneManager implements SceneManagerInterface {
     houseGroup.add(roof);
     
     // Поворот дома на 90 градусов вокруг своей оси
-    houseGroup.rotation.y = - Math.PI / 2;
+    houseGroup.rotation.y = rotation;
     
     // Перемещение группы в нужное место после поворота
     houseGroup.position.set(position.x, 0, position.z);
-    
+
     this.scene.add(houseGroup);
   }
 
