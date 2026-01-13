@@ -70,21 +70,36 @@ export class SceneManager implements SceneManagerInterface {
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     this.scene.add(floor);
-    
+
     // Создание бетонного забора
     this.createConcreteFence();
-    
+
     // Создание детского сада
     this.createKindergarten();
-    
-    // Создание панельного дома (9 этажей, 7 подъездов)
-    this.createPanelHouse(9, 7, { x: -55, z: 0 }, - Math.PI / 2);
-    
-    // Создание панельного дома (5 этажей, 7 подъездов)
-    this.createPanelHouse(5, 7, { x: 45, z: -20 }, -Math.PI / 2);
+
+    // Создание панельного дома (9 этажей, 5 подъездов)
+    this.createPanelHouse(9, 5, { x: -55, z: -30 }, - Math.PI / 2);
+
+    // Создание панельного дома (5 этажей, 5 подъездов)
+    this.createPanelHouse(5, 5, { x: 60, z: -20 }, -Math.PI / 2);
 
     // Создание панельного дома (9 этажей, 3 подъездов)
     this.createPanelHouse(9, 3, { x: -30, z: 90 }, Math.PI);
+
+    // Создание панельного дома (5 этажей, 6 подъездов)
+    this.createPanelHouse(5, 6, { x: 40, z: 140 }, -Math.PI / 2);
+
+    // Ленина 128
+    this.createPanelHouse(9, 4, { x: 0, z: 240 }, Math.PI);
+
+    // Ленина 124
+    this.createPanelHouse(9, 4, { x: 120, z: 220 }, Math.PI);
+
+    // Ленина 122
+    this.createPanelHouse(9, 4, { x: 230, z: 240 }, Math.PI);
+
+    // Завенягина 4
+    this.createPanelHouse(16, 1, { x: -80, z: 30 }, Math.PI);
 
 
     // Создание веранд между забором и детским садом
@@ -236,7 +251,7 @@ export class SceneManager implements SceneManagerInterface {
 
     // Параметры дома
     const floorHeight = 3; // Высота одного этажа
-    const entranceWidth = 17; // Ширина одного подъезда
+    const entranceWidth = 22; // Ширина одного подъезда
     const houseDepth = 12; // Глубина дома
     const totalHeight = floors * floorHeight;
     const totalWidth = entrances * entranceWidth;
