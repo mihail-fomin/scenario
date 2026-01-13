@@ -84,7 +84,7 @@ export class SceneManager implements SceneManagerInterface {
     this.createPanelHouse(5, 5, { x: 60, z: -20 }, -Math.PI / 2);
 
     // Создание панельного дома (9 этажей, 3 подъездов)
-    this.createPanelHouse(9, 3, { x: -30, z: 90 }, Math.PI);
+    this.createPanelHouse(9, 3, { x: -50, z: 60 }, Math.PI);
 
     // Создание панельного дома (5 этажей, 6 подъездов)
     this.createPanelHouse(5, 6, { x: 40, z: 140 }, -Math.PI / 2);
@@ -115,34 +115,84 @@ export class SceneManager implements SceneManagerInterface {
   private createConcreteFence(): void {
     const fenceGroup = new THREE.Group();
 
-    // Основная часть забора - бетонные панели
-    for (let i = 0; i < 30; i++) {
-      const panelGeometry = new THREE.BoxGeometry(1.5, 1.242, 0.2);
-      const panelMaterial = new THREE.MeshLambertMaterial({ color: 0xD3D3D3 }); // Светло-серый бетон
-      const panel = new THREE.Mesh(panelGeometry, panelMaterial);
-      panel.position.set(i * 1.8 - 26.1, 0.621, -6);
-      panel.castShadow = true;
-      panel.receiveShadow = true;
-      fenceGroup.add(panel);
-    }
+    // Параметры детского сада
+    const kindergartenCenterX = 0;
+    const kindergartenCenterZ = -42;
+    const kindergartenWidth = 36;
+    const kindergartenDepth = 10;
 
-    // Верхняя часть забора - бетонная балка (увеличена ширина)
-    const topBeamGeometry = new THREE.BoxGeometry(54.1, 0.3, 0.3);
-    const topBeamMaterial = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 }); // Светло-серебристый
-    const topBeam = new THREE.Mesh(topBeamGeometry, topBeamMaterial);
-    topBeam.position.set(0, 1.3455, -5.9);
-    topBeam.castShadow = true;
-    fenceGroup.add(topBeam);
+    // Расстояние от забора до детского сада
+    const fenceDistance = 18;
 
-    // Опорные столбы
-    for (let i = 0; i < 31; i++) {
-      const postGeometry = new THREE.BoxGeometry(0.3, 1.518, 0.3);
-      const postMaterial = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 }); // Светло-серебристый
-      const post = new THREE.Mesh(postGeometry, postMaterial);
-      post.position.set(i * 1.8 - 27, 0.759, -5.85);
-      post.castShadow = true;
-      fenceGroup.add(post);
-    }
+    // Размер стороны квадратного забора (берем максимальный размер детского сада + расстояние с двух сторон)
+    const maxKindergartenSize = Math.max(kindergartenWidth, kindergartenDepth);
+    const fenceSideLength = maxKindergartenSize + 2 * fenceDistance;
+
+    // Параметры панелей
+    const panelWidth = 1.5;
+    const panelHeight = 1.242;
+    const panelDepth = 0.2;
+    const totalPanelWidth = panelWidth;
+
+    // Позиции углов квадрата
+    const halfSide = fenceSideLength / 2;
+    const corners = [
+      { x: kindergartenCenterX - halfSide, z: kindergartenCenterZ - halfSide }, // Левый нижний
+      { x: kindergartenCenterX + halfSide, z: kindergartenCenterZ - halfSide }, // Правый нижний
+      { x: kindergartenCenterX + halfSide, z: kindergartenCenterZ + halfSide }, // Правый верхний
+      { x: kindergartenCenterX - halfSide, z: kindergartenCenterZ + halfSide }, // Левый верхний
+    ];
+    
+    // Создаем 4 стороны квадрата
+    const sides = [
+      { start: corners[0], end: corners[1], rotation: 0 }, // Нижняя сторона (от левого к правому)
+      { start: corners[1], end: corners[2], rotation: Math.PI / 2 }, // Правая сторона (от нижнего к верхнему)
+      { start: corners[2], end: corners[3], rotation: Math.PI }, // Верхняя сторона (от правого к левому)
+      { start: corners[3], end: corners[0], rotation: -Math.PI / 2 }, // Левая сторона (от верхнего к нижнему)
+    ];
+    
+    // Создаем панели для каждой стороны
+    sides.forEach((side) => {
+      const dx = side.end.x - side.start.x;
+      const dz = side.end.z - side.start.z;
+      const sideLength = Math.sqrt(dx * dx + dz * dz);
+      const actualPanelsPerSide = Math.ceil(sideLength / totalPanelWidth);
+      
+      for (let i = 0; i < actualPanelsPerSide; i++) {
+        // Равномерно распределяем панели по всей длине стороны
+        // Используем центрирование панелей, чтобы они покрывали всю длину
+        const t = actualPanelsPerSide > 1 ? i / (actualPanelsPerSide - 1) : 0.5;
+        const panelX = side.start.x + dx * t;
+        const panelZ = side.start.z + dz * t;
+        
+        // Создаем панель
+        const panelGeometry = new THREE.BoxGeometry(panelWidth, panelHeight, panelDepth);
+        const panelMaterial = new THREE.MeshLambertMaterial({ color: 0xD3D3D3 }); // Светло-серый бетон
+        const panel = new THREE.Mesh(panelGeometry, panelMaterial);
+        panel.position.set(panelX, 0.621, panelZ);
+        panel.rotation.y = side.rotation;
+        panel.castShadow = true;
+        panel.receiveShadow = true;
+        fenceGroup.add(panel);
+        
+        // Верхняя балка для каждой панели
+        const topBeamGeometry = new THREE.BoxGeometry(panelWidth, 0.3, 0.3);
+        const topBeamMaterial = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 }); // Светло-серебристый
+        const topBeam = new THREE.Mesh(topBeamGeometry, topBeamMaterial);
+        topBeam.position.set(panelX, 1.3455, panelZ);
+        topBeam.rotation.y = side.rotation;
+        topBeam.castShadow = true;
+        fenceGroup.add(topBeam);
+        
+        // Опорный столб для каждой панели
+        const postGeometry = new THREE.BoxGeometry(0.3, 1.518, 0.3);
+        const postMaterial = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 }); // Светло-серебристый
+        const post = new THREE.Mesh(postGeometry, postMaterial);
+        post.position.set(panelX, 0.759, panelZ);
+        post.castShadow = true;
+        fenceGroup.add(post);
+      }
+    });
 
     this.scene.add(fenceGroup);
   }
