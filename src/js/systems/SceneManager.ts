@@ -1,7 +1,9 @@
 import * as THREE from 'three';
-import { SceneManagerInterface, CharacterInterface } from '@/types/index';
+import { SceneManagerInterface, CharacterInterface, DebugAsset } from '@/types/index';
 import { CameraController } from './CameraController.js';
 import { Window } from '../classes/Window.js';
+import { isAssetDebugMode, getAssetDebugIdFromUrl } from '../utils/assetDebug.js';
+import { AssetDebugPanel } from '../ui/AssetDebugPanel.js';
 
 export class SceneManager implements SceneManagerInterface {
   private scene!: THREE.Scene;
@@ -10,8 +12,14 @@ export class SceneManager implements SceneManagerInterface {
   private characters: CharacterInterface[] = [];
   private nameLabels: THREE.Mesh[] = [];
   private cameraController!: CameraController;
+  private debugAssets: DebugAsset[] = [];
+  private currentDebugAssetId: string = 'origin';
+  private assetDebugPanel: AssetDebugPanel | null = null;
+  private debugHelpers: THREE.Object3D[] = [];
+  private assetDebugMode: boolean = false;
   
   constructor() {
+    this.assetDebugMode = isAssetDebugMode();
     this.init();
   }
   
@@ -39,6 +47,106 @@ export class SceneManager implements SceneManagerInterface {
     
     // Инициализация контроллера камеры
     this.cameraController = new CameraController(this.camera);
+
+    if (this.assetDebugMode) {
+      this.setupAssetDebugMode();
+    }
+  }
+
+  private setupAssetDebugMode(): void {
+    this.debugAssets.unshift({
+      id: 'origin',
+      label: 'Новый ассет (0, 0, 0)',
+      group: null,
+      position: new THREE.Vector3(0, 0, 0),
+      focusRadius: 20
+    });
+
+    const grid = new THREE.GridHelper(80, 80, 0x888888, 0x444444);
+    const axes = new THREE.AxesHelper(15);
+    this.scene.add(grid);
+    this.scene.add(axes);
+    this.debugHelpers.push(grid, axes);
+
+    this.cameraController.setAssetDebugMode(true);
+
+    const urlAssetId = getAssetDebugIdFromUrl();
+    if (urlAssetId && this.debugAssets.some(a => a.id === urlAssetId)) {
+      this.currentDebugAssetId = urlAssetId;
+    }
+    this.focusDebugAsset(this.currentDebugAssetId);
+
+    this.assetDebugPanel = new AssetDebugPanel();
+    this.assetDebugPanel.setAssets(this.debugAssets, this.currentDebugAssetId);
+    this.assetDebugPanel.setOnAssetChange((id) => this.focusDebugAsset(id));
+
+    document.addEventListener('keydown', this.onAssetDebugKeyDown.bind(this));
+  }
+
+  private onAssetDebugKeyDown(event: KeyboardEvent): void {
+    if (!this.assetDebugMode) return;
+    if (event.target instanceof HTMLElement) {
+      const tag = event.target.tagName;
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+    }
+
+    const index = this.debugAssets.findIndex(a => a.id === this.currentDebugAssetId);
+    if (event.code === 'BracketLeft' && index > 0) {
+      this.focusDebugAsset(this.debugAssets[index - 1].id);
+    } else if (event.code === 'BracketRight' && index < this.debugAssets.length - 1) {
+      this.focusDebugAsset(this.debugAssets[index + 1].id);
+    }
+  }
+
+  private registerDebugAsset(
+    id: string,
+    label: string,
+    group: THREE.Group | null,
+    position?: THREE.Vector3,
+    focusHeight?: number,
+    focusRadius?: number
+  ): void {
+    const worldPos = position ?? (group ? this.getGroupCenter(group) : new THREE.Vector3());
+    const radius = focusRadius ?? (group ? this.getGroupFocusRadius(group) : 20);
+
+    this.debugAssets.push({
+      id,
+      label,
+      group,
+      position: worldPos,
+      focusHeight,
+      focusRadius: radius
+    });
+  }
+
+  private getGroupCenter(group: THREE.Group): THREE.Vector3 {
+    const box = new THREE.Box3().setFromObject(group);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    return center;
+  }
+
+  private getGroupFocusRadius(group: THREE.Group): number {
+    const box = new THREE.Box3().setFromObject(group);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    return Math.max(size.x, size.y, size.z) * 1.2 + 5;
+  }
+
+  public focusDebugAsset(assetId: string): void {
+    const asset = this.debugAssets.find(a => a.id === assetId);
+    if (!asset) return;
+
+    this.currentDebugAssetId = assetId;
+    const height = asset.focusHeight ?? Math.max(asset.position.y * 0.3 + 8, 8);
+    const radius = asset.focusRadius ?? 25;
+
+    this.cameraController.focusOnTarget(asset.position, height, radius);
+    this.assetDebugPanel?.setCurrentAsset(assetId);
+  }
+
+  public isAssetDebugMode(): boolean {
+    return this.assetDebugMode;
   }
   
   private setupLighting(): void {
@@ -78,28 +186,28 @@ export class SceneManager implements SceneManagerInterface {
     this.createKindergarten();
 
     // Создание панельного дома (9 этажей, 5 подъездов)
-    this.createPanelHouse(9, 5, { x: -55, z: -30 }, - Math.PI / 2);
+    this.createPanelHouse(9, 5, { x: -55, z: -30 }, -Math.PI / 2, { id: 'house-9-5-nw', label: 'Дом 9×5 (сев-зап)' });
 
     // Создание панельного дома (5 этажей, 5 подъездов)
-    this.createPanelHouse(5, 5, { x: 60, z: -20 }, -Math.PI / 2);
+    this.createPanelHouse(5, 5, { x: 60, z: -20 }, -Math.PI / 2, { id: 'house-5-5-ne', label: 'Дом 5×5 (сев-вост)' });
 
     // Создание панельного дома (9 этажей, 3 подъездов)
-    this.createPanelHouse(9, 3, { x: -50, z: 60 }, Math.PI);
+    this.createPanelHouse(9, 3, { x: -50, z: 60 }, Math.PI, { id: 'house-9-3-sw', label: 'Дом 9×3 (юг-зап)' });
 
     // Создание панельного дома (5 этажей, 6 подъездов)
-    this.createPanelHouse(5, 6, { x: 40, z: 140 }, -Math.PI / 2);
+    this.createPanelHouse(5, 6, { x: 40, z: 140 }, -Math.PI / 2, { id: 'house-5-6-s', label: 'Дом 5×6 (юг)' });
 
     // Ленина 128
-    this.createPanelHouse(9, 4, { x: 0, z: 240 }, Math.PI);
+    this.createPanelHouse(9, 4, { x: 0, z: 240 }, Math.PI, { id: 'lenina-128', label: 'Ленина 128' });
 
     // Ленина 124
-    this.createPanelHouse(9, 4, { x: 120, z: 220 }, Math.PI);
+    this.createPanelHouse(9, 4, { x: 120, z: 220 }, Math.PI, { id: 'lenina-124', label: 'Ленина 124' });
 
     // Ленина 122
-    this.createPanelHouse(9, 4, { x: 230, z: 240 }, Math.PI);
+    this.createPanelHouse(9, 4, { x: 230, z: 240 }, Math.PI, { id: 'lenina-122', label: 'Ленина 122' });
 
     // Завенягина 4
-    this.createPanelHouse(16, 1, { x: -80, z: 30 }, Math.PI);
+    this.createPanelHouse(16, 1, { x: -80, z: 30 }, Math.PI, { id: 'zavenyagina-4', label: 'Завенягина 4' });
 
 
     // Создание веранд между забором и детским садом
@@ -194,11 +302,16 @@ export class SceneManager implements SceneManagerInterface {
       }
     });
 
+    fenceGroup.name = 'fence';
     this.scene.add(fenceGroup);
+    if (this.assetDebugMode) {
+      this.registerDebugAsset('fence', 'Забор', fenceGroup);
+    }
   }
 
   private createKindergarten(): void {
     const kindergartenGroup = new THREE.Group();
+    kindergartenGroup.name = 'kindergarten';
     
     // Основное здание (первый этаж)
     const groundFloorGeometry = new THREE.BoxGeometry(36, 5, 10);
@@ -244,6 +357,9 @@ export class SceneManager implements SceneManagerInterface {
     kindergartenGroup.add(door);
 
     this.scene.add(kindergartenGroup);
+    if (this.assetDebugMode) {
+      this.registerDebugAsset('kindergarten', 'Детский сад', kindergartenGroup);
+    }
   }
 
   private createFloorWindows(
@@ -295,9 +411,13 @@ export class SceneManager implements SceneManagerInterface {
     floors: number,
     entrances: number,
     position: { x: number, z: number } = { x: 0, z: 0 },
-    rotation: number = 0
-): void {
+    rotation: number = 0,
+    debugMeta?: { id: string; label: string }
+  ): void {
     const houseGroup = new THREE.Group();
+    if (debugMeta) {
+      houseGroup.name = debugMeta.id;
+    }
 
     // Параметры дома
     const floorHeight = 3; // Высота одного этажа
@@ -414,6 +534,10 @@ export class SceneManager implements SceneManagerInterface {
     houseGroup.position.set(position.x, 0, position.z);
 
     this.scene.add(houseGroup);
+
+    if (this.assetDebugMode && debugMeta) {
+      this.registerDebugAsset(debugMeta.id, debugMeta.label, houseGroup);
+    }
   }
 
   private createSingleVeranda(x: number, z: number): THREE.Group {
@@ -600,6 +724,8 @@ export class SceneManager implements SceneManagerInterface {
   }
   
   public dispose(): void {
+    this.assetDebugPanel?.dispose();
+
     // Очистка персонажей
     this.characters.forEach(character => {
       character.dispose();

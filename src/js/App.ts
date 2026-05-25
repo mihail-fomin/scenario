@@ -13,6 +13,7 @@ import { oreoChocolateDialogueSet } from './data/oreoChocolateDialogue.js';
 import { grishaShitDialogueSet } from './data/grishaShitDialogue.js';
 import { grishaTwinsDialogueSet } from './data/grishaTwinsDialogue.js';
 import { policeStationDialogueSet } from './data/policeStationDialogue.js';
+import { isAssetDebugMode } from './utils/assetDebug.js';
 
 import { Dialogue, CharacterInterface, DialogueSystemInterface, TTSInterface, SceneManagerInterface, UIManagerInterface, DialogueSet, DialogueSetManagerInterface } from '@/types/index';
 
@@ -25,8 +26,10 @@ export class App {
   private dialogueSystem: DialogueSystemInterface | null = null;
   private isRunning: boolean = false;
   private lastTime: number = 0;
+  private assetDebugMode: boolean = false;
   
   constructor() {
+    this.assetDebugMode = isAssetDebugMode();
     this.sceneManager = new SceneManager();
     this.uiManager = new UIManager();
     this.tts = new TextToSpeech();
@@ -36,12 +39,26 @@ export class App {
   }
   
   private init(): void {
+    if (this.assetDebugMode) {
+      this.hideDialogueUI();
+      this.setupEventListeners();
+      this.start();
+      return;
+    }
+
     this.createCharacters();
     this.setupDialogueSets();
     this.setupDialogueSystem();
     this.setupUI();
     this.setupEventListeners();
     this.start();
+  }
+
+  private hideDialogueUI(): void {
+    const ui = document.getElementById('ui');
+    if (ui) {
+      ui.style.display = 'none';
+    }
   }
   
   private createCharacters(): void {

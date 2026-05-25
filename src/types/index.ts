@@ -78,6 +78,27 @@ export interface CameraSettings {
   ZOOM_SPEED: number;
 }
 
+export interface AssetDebugCameraSettings {
+  RADIUS: number;
+  HEIGHT: number;
+  SENSITIVITY: number;
+  MIN_RADIUS: number;
+  MAX_RADIUS: number;
+  ZOOM_SENSITIVITY: number;
+  ZOOM_SPEED: number;
+  PAN_SPEED: number;
+  KEY_PAN_SPEED: number;
+}
+
+export interface DebugAsset {
+  id: string;
+  label: string;
+  group: THREE.Group | null;
+  position: THREE.Vector3;
+  focusHeight?: number;
+  focusRadius?: number;
+}
+
 // Типы настроек TTS
 export interface TTSSettings {
   LANG: string;
@@ -129,6 +150,7 @@ export interface SceneManagerInterface {
   update(deltaTime: number): void;
   render(): void;
   onWindowResize(): void;
+  isAssetDebugMode(): boolean;
   dispose(): void;
 }
 

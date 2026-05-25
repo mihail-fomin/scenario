@@ -1,4 +1,4 @@
-import { CharacterData, AnimationSettings, CameraSettings, TTSSettings } from '@/types/index';
+import { CharacterData, AnimationSettings, CameraSettings, AssetDebugCameraSettings, TTSSettings } from '@/types/index';
 
 // Константы персонажей - стоят перед забором
 export const CHARACTER_DATA: CharacterData[] = [
@@ -27,6 +27,18 @@ export const CAMERA_SETTINGS: CameraSettings = {
   MAX_RADIUS: 20,
   ZOOM_SENSITIVITY: 0.8,
   ZOOM_SPEED: 0.05
+};
+
+export const ASSET_DEBUG_CAMERA_SETTINGS: AssetDebugCameraSettings = {
+  RADIUS: 25,
+  HEIGHT: 12,
+  SENSITIVITY: 0.003,
+  MIN_RADIUS: 2,
+  MAX_RADIUS: 120,
+  ZOOM_SENSITIVITY: 1.2,
+  ZOOM_SPEED: 0.08,
+  PAN_SPEED: 0.002,
+  KEY_PAN_SPEED: 0.4
 };
 
 // Настройки TTS
