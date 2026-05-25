@@ -185,6 +185,13 @@ export class SceneManager implements SceneManagerInterface {
     // Создание детского сада
     this.createKindergarten();
 
+    // Продуктовый магазин
+    this.createGroceryStore(
+      { x: 30, z: 69 },
+      0,
+      { id: 'grocery-store', label: 'Продуктовый магазин' }
+    );
+
     // Создание панельного дома (9 этажей, 5 подъездов)
     this.createPanelHouse(9, 5, { x: -55, z: -30 }, -Math.PI / 2, { id: 'house-9-5-nw', label: 'Дом 9×5 (сев-зап)' });
 
@@ -359,6 +366,103 @@ export class SceneManager implements SceneManagerInterface {
     this.scene.add(kindergartenGroup);
     if (this.assetDebugMode) {
       this.registerDebugAsset('kindergarten', 'Детский сад', kindergartenGroup);
+    }
+  }
+
+  private createGroceryStore(
+    position: { x: number; z: number } = { x: 0, z: 0 },
+    rotation: number = 0,
+    debugMeta?: { id: string; label: string }
+  ): void {
+    const storeGroup = new THREE.Group();
+    if (debugMeta) {
+      storeGroup.name = debugMeta.id;
+    }
+
+    const width = 30;
+    const depth = 10;
+    const height = 6;
+    const porchDepth = 3.5;
+    const porchWidth = 6;
+    const frontZ = -depth / 2;
+
+    const facadeMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+    const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x6B7280 });
+    const porchMaterial = new THREE.MeshLambertMaterial({ color: 0xB8B8B8 });
+    const doorMaterial = new THREE.MeshLambertMaterial({ color: 0x5C3D2E });
+
+    const addBox = (
+      w: number, h: number, d: number,
+      x: number, y: number, z: number,
+      material: THREE.Material,
+      castShadow = true
+    ): THREE.Mesh => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = castShadow;
+      mesh.receiveShadow = true;
+      storeGroup.add(mesh);
+      return mesh;
+    };
+
+    // Основной корпус
+    addBox(width, height, depth, 0, height / 2, 0, facadeMaterial);
+
+    // Плоская крыша с небольшым свесом
+    addBox(width + 0.8, 0.25, depth + 0.6, 0, height + 0.125, 0, roofMaterial);
+
+    // Боковые стены (чуть темнее для объёма)
+    const sideMaterial = new THREE.MeshLambertMaterial({ color: 0xF0F0F0 });
+    addBox(0.2, height, depth, -width / 2 - 0.1, height / 2, 0, sideMaterial);
+    addBox(0.2, height, depth, width / 2 + 0.1, height / 2, 0, sideMaterial);
+
+    // --- Крыльцо ---
+    const porchCenterZ = frontZ - porchDepth / 2 - 0.1;
+    const porchPlatformY = 1.3;
+
+    // Площадка крыльца
+    addBox(porchWidth, 0.12, porchDepth, 0, porchPlatformY, porchCenterZ, porchMaterial);
+
+    // Ступени: от земли к крыльцу
+    const stepCount = 8;
+    const stepDepth = 0.35;
+    const stepHeight = 0.15;
+    const stepsFarZ = porchCenterZ - porchDepth / 2 - stepDepth / 2 - (stepCount - 1) * stepDepth;
+    for (let i = 0; i < stepCount; i++) {
+      const stepZ = stepsFarZ + i * stepDepth;
+      const stepY = stepHeight / 2 + i * stepHeight;
+      addBox(porchWidth - 0.4, stepHeight, stepDepth, 0, stepY, stepZ, porchMaterial);
+    }
+
+    // Поручни крыльца
+    const railingMaterial = new THREE.MeshLambertMaterial({ color: 0x909090 });
+    addBox(porchWidth, 0.08, 0.08, 0, porchPlatformY + 0.5, porchCenterZ + porchDepth / 2 - 0.1, railingMaterial);
+    addBox(0.08, 0.5, porchDepth, -porchWidth / 2 + 0.04, porchPlatformY + 0.3, porchCenterZ, railingMaterial);
+    addBox(0.08, 0.5, porchDepth, porchWidth / 2 - 0.04, porchPlatformY + 0.3, porchCenterZ, railingMaterial);
+
+    // Козырёк над крыльцом
+    const canopyZ = porchCenterZ;
+    addBox(porchWidth + 0.6, 0.12, porchDepth + 0.4, 0, height - 0.6, canopyZ, roofMaterial);
+
+    // Столбы козырька
+    const postGeometry = new THREE.CylinderGeometry(0.1, 0.12, height - 1.2, 8);
+    const postMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
+    for (const postX of [-porchWidth / 2 + 0.2, porchWidth / 2 - 0.2]) {
+      const post = new THREE.Mesh(postGeometry, postMat);
+      post.position.set(postX, (height - 1.2) / 2 + 0.3, canopyZ);
+      post.castShadow = true;
+      storeGroup.add(post);
+    }
+
+    // Дверь на крыльце
+    addBox(1.4, 2.3, 0.12, 0, porchPlatformY + 1.15, frontZ - 0.2, doorMaterial);
+
+    storeGroup.rotation.y = rotation;
+    storeGroup.position.set(position.x, 0, position.z);
+    this.scene.add(storeGroup);
+
+    if (this.assetDebugMode && debugMeta) {
+      this.registerDebugAsset(debugMeta.id, debugMeta.label, storeGroup);
     }
   }
 
