@@ -46,8 +46,10 @@ function slab(
     material.map = tileSize > 0 ? withRepeat(texture, w / tileSize, d / tileSize) : texture;
   }
   material.polygonOffset = true;
-  material.polygonOffsetFactor = -2;
-  material.polygonOffsetUnits = -2;
+  // Чем выше слой (y), тем сильнее он «подтянут» к камере: разметка всегда поверх дороги, дорога поверх газона
+  const layer = -2 - y * 100;
+  material.polygonOffsetFactor = layer;
+  material.polygonOffsetUnits = layer;
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), material);
   m.rotation.x = -Math.PI / 2;
   m.position.set(x, y + 0.08, z); // над полем, чтобы не было z-fighting
@@ -156,7 +158,8 @@ export class SceneDecor {
   private createFootpath(): void {
     const g = new THREE.Group();
     g.add(slab(90, 2.6, 0xb0a99a, 0, 3, 0.03, pavingTexture(), 2.6));
-    g.add(slab(2.6, 36, 0xb0a99a, 0, 21, 0.03, pavingTexture(), 2.6)); // дорожка к дороге
+    // Дорожка к дороге начинается там, где кончается горизонтальная (z 4.3), и заканчивается у тротуара (z 38) — без наложений
+    g.add(slab(2.6, 33.7, 0xb0a99a, 0, 21.15, 0.03, pavingTexture(), 2.6));
     this.add(g, 'decor-paths', 'Дорожки');
   }
 
