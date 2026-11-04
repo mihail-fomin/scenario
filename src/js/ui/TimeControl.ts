@@ -16,6 +16,7 @@ export class TimeControl {
   private autoCheckbox: HTMLInputElement;
   private cycleCheckbox: HTMLInputElement;
   private soundButton: HTMLButtonElement;
+  private toggle!: HTMLButtonElement;
 
   constructor(private time: TimeOfDay, private audio: AmbientAudio) {
     this.root = document.createElement('div');
@@ -32,6 +33,18 @@ export class TimeControl {
       <button id="tp-sound" class="tp-sound" type="button">🔇 Звук выключен</button>
     `;
     (document.getElementById('ui') ?? document.body).appendChild(this.root);
+
+    // На телефоне панель скрыта: открывается кнопкой в правом верхнем углу
+    const ui = document.getElementById('ui') ?? document.body;
+    this.toggle = document.createElement('button');
+    this.toggle.id = 'time-toggle';
+    this.toggle.className = 'time-toggle';
+    this.toggle.type = 'button';
+    this.toggle.textContent = '🕒';
+    this.toggle.setAttribute('aria-label', 'Время суток и звук');
+    this.toggle.setAttribute('aria-expanded', 'false');
+    this.toggle.addEventListener('click', () => this.setOpen(!this.root.classList.contains('open')));
+    ui.appendChild(this.toggle);
 
     this.slider = this.root.querySelector('#tp-slider') as HTMLInputElement;
     this.clock = this.root.querySelector('#tp-clock') as HTMLSpanElement;
@@ -58,6 +71,12 @@ export class TimeControl {
     });
 
     this.time.onChange((s) => this.syncClock(s.hour));
+  }
+
+  private setOpen(open: boolean): void {
+    this.root.classList.toggle('open', open);
+    this.toggle.classList.toggle('active', open);
+    this.toggle.setAttribute('aria-expanded', String(open));
   }
 
   private syncClock(hour: number): void {

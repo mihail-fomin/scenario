@@ -693,13 +693,48 @@ button, .dialogue-card {
     transform: translate(-50%, 0);
 }
 
+/* Кнопка открытия панели времени — только на телефоне */
+.time-toggle {
+    display: none;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid #4CAF50;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    pointer-events: auto;
+    z-index: 200;
+}
+
+.time-toggle.active {
+    background: rgba(76, 175, 80, 0.45);
+}
+
 @media (max-width: 768px) {
+    .time-toggle {
+        display: flex;
+    }
+
+    /* По умолчанию панель скрыта; по кнопке появляется в правом верхнем углу под ней */
     #time-panel {
-        top: auto;
-        bottom: 96px;
-        right: 8px;
-        width: 180px;
-        padding: 8px 10px;
+        display: none;
+        top: 68px;
+        bottom: auto;
+        right: 12px;
+        width: min(220px, calc(100vw - 24px));
+        padding: 10px 12px;
         font-size: 12px;
+    }
+
+    #time-panel.open {
+        display: block;
     }
 }
