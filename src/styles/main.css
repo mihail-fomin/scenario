@@ -591,3 +591,115 @@ button, .dialogue-card {
 .asset-debug-hints div {
     margin-bottom: 2px;
 }
+
+/* ---------- Панель времени суток ---------- */
+#time-panel {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 220px;
+    padding: 12px 14px;
+    background: rgba(10, 14, 24, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 13px;
+    pointer-events: auto;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 120;
+}
+
+#time-panel .tp-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+}
+
+#time-panel .tp-title {
+    font-weight: bold;
+    color: #4CAF50;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 11px;
+}
+
+#time-panel .tp-clock {
+    font-size: 18px;
+    font-variant-numeric: tabular-nums;
+}
+
+#time-panel input[type="range"] {
+    width: 100%;
+    margin: 4px 0 8px;
+    accent-color: #4CAF50;
+}
+
+#time-panel .tp-presets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+#time-panel button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #fff;
+    border-radius: 6px;
+    padding: 5px 2px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+#time-panel button:hover {
+    background: rgba(76, 175, 80, 0.35);
+}
+
+#time-panel .tp-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0;
+    cursor: pointer;
+}
+
+#time-panel .tp-sound {
+    width: 100%;
+    margin-top: 6px;
+    padding: 6px;
+}
+
+/* ---------- Подпись при клике на объект ---------- */
+#scene-toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translate(-50%, -8px);
+    background: rgba(0, 0, 0, 0.78);
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 15px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 200;
+}
+
+#scene-toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+@media (max-width: 768px) {
+    #time-panel {
+        top: auto;
+        bottom: 96px;
+        right: 8px;
+        width: 180px;
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}

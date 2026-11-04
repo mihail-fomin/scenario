@@ -37,7 +37,7 @@ export function clearTimer(timer: number | null): void {
   }
 }
 
-export function throttle<T extends (...args: any[]) => any>(func: T, limit: number): T {
+export function throttle<T extends (...args: never[]) => unknown>(func: T, limit: number): T {
   let inThrottle: boolean;
   return ((...args: Parameters<T>) => {
     if (!inThrottle) {
@@ -48,7 +48,7 @@ export function throttle<T extends (...args: any[]) => any>(func: T, limit: numb
   }) as T;
 }
 
-export function debounce<T extends (...args: any[]) => any>(func: T, wait: number, immediate: boolean = false): T {
+export function debounce<T extends (...args: never[]) => unknown>(func: T, wait: number, immediate: boolean = false): T {
   let timeout: number | null;
   return ((...args: Parameters<T>) => {
     const later = () => {

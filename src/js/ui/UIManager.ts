@@ -145,8 +145,6 @@ export class UIManager implements UIManagerInterface {
         <div class="dialogue-title">${title}</div>
         <div class="dialogue-description">${description}</div>
       `;
-    } else {
-      console.warn('Элемент dialogue-info не найден в DOM');
     }
   }
 

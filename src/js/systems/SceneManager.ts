@@ -4,6 +4,12 @@ import { CameraController } from './CameraController.js';
 import { Window } from '../classes/Window.js';
 import { isAssetDebugMode, getAssetDebugIdFromUrl } from '../utils/assetDebug.js';
 import { AssetDebugPanel } from '../ui/AssetDebugPanel.js';
+import { SceneDecor } from './SceneDecor.js';
+import { SceneBuildings } from './SceneBuildings.js';
+import { TimeOfDay } from './TimeOfDay.js';
+import { NpcSystem } from './NpcSystem.js';
+import { SceneInteraction } from './SceneInteraction.js';
+import { grassTexture, withRepeat, setMaxAnisotropy } from '../utils/textures.js';
 
 export class SceneManager implements SceneManagerInterface {
   private scene!: THREE.Scene;
@@ -17,6 +23,18 @@ export class SceneManager implements SceneManagerInterface {
   private assetDebugPanel: AssetDebugPanel | null = null;
   private debugHelpers: THREE.Object3D[] = [];
   private assetDebugMode: boolean = false;
+  private decor: SceneDecor | null = null;
+  private npcs: NpcSystem | null = null;
+  private interaction: SceneInteraction | null = null;
+  private timeOfDay!: TimeOfDay;
+  private sunLight!: THREE.DirectionalLight;
+  private moonLight!: THREE.DirectionalLight;
+  private hemiLight!: THREE.HemisphereLight;
+  private stageLight!: THREE.PointLight;
+  private readonly worldUp = new THREE.Vector3(0, 1, 0);
+  private readonly shadowRight = new THREE.Vector3();
+  private readonly shadowUp = new THREE.Vector3();
+  private readonly shadowCenter = new THREE.Vector3();
   
   constructor() {
     this.assetDebugMode = isAssetDebugMode();
@@ -26,10 +44,10 @@ export class SceneManager implements SceneManagerInterface {
   private init(): void {
     // Создание сцены
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x87CEEB); // Небесно-голубой фон
+    // Фон и туман задаёт TimeOfDay (небесный купол)
     
     // Создание камеры
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.3, 2500);
     this.camera.position.set(0, 2, 8);
     this.camera.lookAt(0, 0, 0);
     
@@ -37,16 +55,30 @@ export class SceneManager implements SceneManagerInterface {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    
-    // Добавление освещения
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.0;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    setMaxAnisotropy(this.renderer.capabilities.getMaxAnisotropy());
+
+    // Добавление освещения и системы времени суток
     this.setupLighting();
-    
+    this.timeOfDay = new TimeOfDay(this.scene, this.renderer, this.camera, this.sunLight, this.moonLight, this.hemiLight);
+
     // Создание окружения
     this.createEnvironment();
-    
+
     // Инициализация контроллера камеры
     this.cameraController = new CameraController(this.camera);
+
+    // Ночью окна, фонари и свет у персонажей включаются по состоянию времени суток
+    this.timeOfDay.onChange((state) => {
+      Window.setNightFactor(state.night);
+      this.decor?.setNight(state.night);
+      this.stageLight.intensity = state.night * 38;
+    });
+
+    this.interaction = new SceneInteraction(this.camera, this.renderer.domElement, this.scene);
 
     if (this.assetDebugMode) {
       this.setupAssetDebugMode();
@@ -150,638 +182,53 @@ export class SceneManager implements SceneManagerInterface {
   }
   
   private setupLighting(): void {
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
-    this.scene.add(ambientLight);
-    
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
-    directionalLight.position.set(-5, 10, -4);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
-    
-    // Настройка области камеры теней для корректного отображения теней
-    directionalLight.shadow.camera.left = -60;
-    directionalLight.shadow.camera.right = 60;
-    directionalLight.shadow.camera.top = 60;
-    directionalLight.shadow.camera.bottom = -60;
-    directionalLight.shadow.camera.near = 0.5;
-    directionalLight.shadow.camera.far = 100;
-    
-    this.scene.add(directionalLight);
+    // Мягкая подсветка «небо/земля» — тени не чёрные, как было с одним ambient
+    this.hemiLight = new THREE.HemisphereLight(0xbcd4ff, 0x6a6a50, 1.0);
+    this.scene.add(this.hemiLight);
+
+    this.sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    this.sunLight.castShadow = true;
+    this.sunLight.shadow.mapSize.set(2048, 2048);
+    const sc = this.sunLight.shadow.camera;
+    // Область теней следует за камерой (см. update), поэтому она небольшая и чёткая
+    sc.left = -45; sc.right = 45; sc.top = 45; sc.bottom = -45;
+    sc.near = 1; sc.far = 220;
+    this.sunLight.shadow.bias = -0.0004;
+    this.sunLight.shadow.normalBias = 0.05;
+    this.scene.add(this.sunLight, this.sunLight.target);
+
+    this.moonLight = new THREE.DirectionalLight(0x9db6ff, 0.4);
+    this.scene.add(this.moonLight, this.moonLight.target);
+
+    // Тёплый свет фонаря рядом с действием — включается ночью
+    this.stageLight = new THREE.PointLight(0xffd9a0, 0, 32, 2);
+    this.scene.add(this.stageLight);
   }
-  
+
   private createEnvironment(): void {
     // Пол
     const floorGeometry = new THREE.PlaneGeometry(10000, 10000);
-    const floorMaterial = new THREE.MeshLambertMaterial({ color: 0x90EE90 });
+    const floorMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, map: withRepeat(grassTexture(), 1250, 1250) });
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     this.scene.add(floor);
 
-    // Создание бетонного забора
-    this.createConcreteFence();
+    // Застройка: забор, детский сад, магазин, дома, веранды, трубы, деревья
+    new SceneBuildings(this.scene, this.assetDebugMode
+      ? (id, label, group) => this.registerDebugAsset(id, label, group)
+      : undefined
+    ).buildAll();
 
-    // Создание детского сада
-    this.createKindergarten();
-
-    // Продуктовый магазин
-    this.createGroceryStore(
-      { x: 30, z: 69 },
-      0,
-      { id: 'grocery-store', label: 'Продуктовый магазин' }
-    );
-
-    // Создание панельного дома (9 этажей, 5 подъездов)
-    this.createPanelHouse(9, 5, { x: -55, z: -30 }, -Math.PI / 2, { id: 'house-9-5-nw', label: 'Дом 9×5 (сев-зап)' });
-
-    // Создание панельного дома (5 этажей, 5 подъездов)
-    this.createPanelHouse(5, 5, { x: 60, z: -20 }, -Math.PI / 2, { id: 'house-5-5-ne', label: 'Дом 5×5 (сев-вост)' });
-
-    // Создание панельного дома (9 этажей, 3 подъездов)
-    this.createPanelHouse(9, 3, { x: -50, z: 60 }, Math.PI, { id: 'house-9-3-sw', label: 'Дом 9×3 (юг-зап)' });
-
-    // Создание панельного дома (5 этажей, 6 подъездов)
-    this.createPanelHouse(5, 6, { x: 40, z: 140 }, -Math.PI / 2, { id: 'house-5-6-s', label: 'Дом 5×6 (юг)' });
-
-    // Ленина 128
-    this.createPanelHouse(9, 4, { x: 0, z: 240 }, Math.PI, { id: 'lenina-128', label: 'Ленина 128' });
-
-    // Ленина 124
-    this.createPanelHouse(9, 4, { x: 120, z: 220 }, Math.PI, { id: 'lenina-124', label: 'Ленина 124' });
-
-    // Ленина 122
-    this.createPanelHouse(9, 4, { x: 230, z: 240 }, Math.PI, { id: 'lenina-122', label: 'Ленина 122' });
-
-    // Завенягина 4
-    this.createPanelHouse(16, 1, { x: -80, z: 30 }, Math.PI, { id: 'zavenyagina-4', label: 'Завенягина 4' });
-
-
-    // Создание веранд между забором и детским садом
-    this.createVerandas();
-    
-    // Создание труб возле забора
-    this.createPipes();
-    
-    // Несколько деревьев по бокам для атмосферы
-    this.createSideTrees();
-  }
-
-  private createConcreteFence(): void {
-    const fenceGroup = new THREE.Group();
-
-    // Параметры детского сада
-    const kindergartenCenterX = 0;
-    const kindergartenCenterZ = -42;
-    const kindergartenWidth = 36;
-    const kindergartenDepth = 10;
-
-    // Расстояние от забора до детского сада
-    const fenceDistance = 18;
-
-    // Размер стороны квадратного забора (берем максимальный размер детского сада + расстояние с двух сторон)
-    const maxKindergartenSize = Math.max(kindergartenWidth, kindergartenDepth);
-    const fenceSideLength = maxKindergartenSize + 2 * fenceDistance;
-
-    // Параметры панелей
-    const panelWidth = 1.5;
-    const panelHeight = 1.242;
-    const panelDepth = 0.2;
-    const totalPanelWidth = panelWidth;
-
-    // Позиции углов квадрата
-    const halfSide = fenceSideLength / 2;
-    const corners = [
-      { x: kindergartenCenterX - halfSide, z: kindergartenCenterZ - halfSide }, // Левый нижний
-      { x: kindergartenCenterX + halfSide, z: kindergartenCenterZ - halfSide }, // Правый нижний
-      { x: kindergartenCenterX + halfSide, z: kindergartenCenterZ + halfSide }, // Правый верхний
-      { x: kindergartenCenterX - halfSide, z: kindergartenCenterZ + halfSide }, // Левый верхний
-    ];
-    
-    // Создаем 4 стороны квадрата
-    const sides = [
-      { start: corners[0], end: corners[1], rotation: 0 }, // Нижняя сторона (от левого к правому)
-      { start: corners[1], end: corners[2], rotation: Math.PI / 2 }, // Правая сторона (от нижнего к верхнему)
-      { start: corners[2], end: corners[3], rotation: Math.PI }, // Верхняя сторона (от правого к левому)
-      { start: corners[3], end: corners[0], rotation: -Math.PI / 2 }, // Левая сторона (от верхнего к нижнему)
-    ];
-    
-    // Создаем панели для каждой стороны
-    sides.forEach((side) => {
-      const dx = side.end.x - side.start.x;
-      const dz = side.end.z - side.start.z;
-      const sideLength = Math.sqrt(dx * dx + dz * dz);
-      const actualPanelsPerSide = Math.ceil(sideLength / totalPanelWidth);
-      
-      for (let i = 0; i < actualPanelsPerSide; i++) {
-        // Равномерно распределяем панели по всей длине стороны
-        // Используем центрирование панелей, чтобы они покрывали всю длину
-        const t = actualPanelsPerSide > 1 ? i / (actualPanelsPerSide - 1) : 0.5;
-        const panelX = side.start.x + dx * t;
-        const panelZ = side.start.z + dz * t;
-        
-        // Создаем панель
-        const panelGeometry = new THREE.BoxGeometry(panelWidth, panelHeight, panelDepth);
-        const panelMaterial = new THREE.MeshLambertMaterial({ color: 0xD3D3D3 }); // Светло-серый бетон
-        const panel = new THREE.Mesh(panelGeometry, panelMaterial);
-        panel.position.set(panelX, 0.621, panelZ);
-        panel.rotation.y = side.rotation;
-        panel.castShadow = true;
-        panel.receiveShadow = true;
-        fenceGroup.add(panel);
-        
-        // Верхняя балка для каждой панели
-        const topBeamGeometry = new THREE.BoxGeometry(panelWidth, 0.3, 0.3);
-        const topBeamMaterial = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 }); // Светло-серебристый
-        const topBeam = new THREE.Mesh(topBeamGeometry, topBeamMaterial);
-        topBeam.position.set(panelX, 1.3455, panelZ);
-        topBeam.rotation.y = side.rotation;
-        topBeam.castShadow = true;
-        fenceGroup.add(topBeam);
-        
-        // Опорный столб для каждой панели
-        const postGeometry = new THREE.BoxGeometry(0.3, 1.518, 0.3);
-        const postMaterial = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 }); // Светло-серебристый
-        const post = new THREE.Mesh(postGeometry, postMaterial);
-        post.position.set(panelX, 0.759, panelZ);
-        post.castShadow = true;
-        fenceGroup.add(post);
-      }
+    // Наполнение двора: дорога, площадки, машины, гаражи и т.д.
+    this.decor = new SceneDecor(this.scene, (id, label, group) => {
+      if (this.assetDebugMode) this.registerDebugAsset(id, label, group);
     });
 
-    fenceGroup.name = 'fence';
-    this.scene.add(fenceGroup);
-    if (this.assetDebugMode) {
-      this.registerDebugAsset('fence', 'Забор', fenceGroup);
-    }
+    // Жители двора: бабушки, дети, прохожие
+    this.npcs = new NpcSystem(this.scene, this.camera);
   }
 
-  private createKindergarten(): void {
-    const kindergartenGroup = new THREE.Group();
-    kindergartenGroup.name = 'kindergarten';
-    
-    // Основное здание (первый этаж)
-    const groundFloorGeometry = new THREE.BoxGeometry(36, 5, 10);
-    const groundFloorMaterial = new THREE.MeshLambertMaterial({ color: 0xFFF0F5 }); // Почти белый с легким розовым оттенком
-    const groundFloor = new THREE.Mesh(groundFloorGeometry, groundFloorMaterial);
-    groundFloor.position.set(0, 2.5, -42);
-    groundFloor.castShadow = true;
-    groundFloor.receiveShadow = true;
-    kindergartenGroup.add(groundFloor);
-
-    // Второй этаж
-    const secondFloorGeometry = new THREE.BoxGeometry(36, 5, 10);
-    const secondFloorMaterial = new THREE.MeshLambertMaterial({ color: 0xFFF0F5 }); // Почти белый с легким розовым оттенком
-    const secondFloor = new THREE.Mesh(secondFloorGeometry, secondFloorMaterial);
-    secondFloor.position.set(0, 7.5, -42);
-    secondFloor.castShadow = true;
-    secondFloor.receiveShadow = true;
-    kindergartenGroup.add(secondFloor);
-
-    // Окна первого этажа (передняя сторона)
-    for (let i = 0; i < 6; i++) {
-      const windowGeometry = new THREE.BoxGeometry(3, 2, 0.5);
-      const windowMaterial = new THREE.MeshLambertMaterial({ color: 0x0066CC, emissive: 0x003366, depthTest: true, depthWrite: false }); // Ярко-синие окна с небольшим свечением
-      const window = new THREE.Mesh(windowGeometry, windowMaterial);
-      window.position.set(i * 6.5 - 16.25, 2, -36.5);
-      kindergartenGroup.add(window);
-    }
-
-    // Окна второго этажа (передняя сторона)
-    for (let i = 0; i < 6; i++) {
-      const windowGeometry = new THREE.BoxGeometry(3, 2, 0.5);
-      const windowMaterial = new THREE.MeshLambertMaterial({ color: 0x0066CC, emissive: 0x003366, depthTest: true, depthWrite: false });
-      const window = new THREE.Mesh(windowGeometry, windowMaterial);
-      window.position.set(i * 6.5 - 16.25, 6, -36.5);
-      kindergartenGroup.add(window);
-    }
-
-    // Дверь
-    const doorGeometry = new THREE.BoxGeometry(1.5, 3, 0.1);
-    const doorMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
-    const door = new THREE.Mesh(doorGeometry, doorMaterial);
-    door.position.set(-12, 1.5, -37.9);
-    kindergartenGroup.add(door);
-
-    this.scene.add(kindergartenGroup);
-    if (this.assetDebugMode) {
-      this.registerDebugAsset('kindergarten', 'Детский сад', kindergartenGroup);
-    }
-  }
-
-  private createGroceryStore(
-    position: { x: number; z: number } = { x: 0, z: 0 },
-    rotation: number = 0,
-    debugMeta?: { id: string; label: string }
-  ): void {
-    const storeGroup = new THREE.Group();
-    if (debugMeta) {
-      storeGroup.name = debugMeta.id;
-    }
-
-    const width = 30;
-    const depth = 10;
-    const height = 6;
-    const porchDepth = 3.5;
-    const porchWidth = 6;
-    const frontZ = -depth / 2;
-
-    const facadeMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
-    const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x6B7280 });
-    const porchMaterial = new THREE.MeshLambertMaterial({ color: 0xB8B8B8 });
-    const doorMaterial = new THREE.MeshLambertMaterial({ color: 0x5C3D2E });
-
-    const addBox = (
-      w: number, h: number, d: number,
-      x: number, y: number, z: number,
-      material: THREE.Material,
-      castShadow = true
-    ): THREE.Mesh => {
-      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
-      mesh.position.set(x, y, z);
-      mesh.castShadow = castShadow;
-      mesh.receiveShadow = true;
-      storeGroup.add(mesh);
-      return mesh;
-    };
-
-    // Основной корпус
-    addBox(width, height, depth, 0, height / 2, 0, facadeMaterial);
-
-    // Плоская крыша с небольшым свесом
-    addBox(width + 0.8, 0.25, depth + 0.6, 0, height + 0.125, 0, roofMaterial);
-
-    // Боковые стены (чуть темнее для объёма)
-    const sideMaterial = new THREE.MeshLambertMaterial({ color: 0xF0F0F0 });
-    addBox(0.2, height, depth, -width / 2 - 0.1, height / 2, 0, sideMaterial);
-    addBox(0.2, height, depth, width / 2 + 0.1, height / 2, 0, sideMaterial);
-
-    // --- Крыльцо ---
-    const porchCenterZ = frontZ - porchDepth / 2 - 0.1;
-    const porchPlatformY = 1.3;
-
-    // Площадка крыльца
-    addBox(porchWidth, 0.12, porchDepth, 0, porchPlatformY, porchCenterZ, porchMaterial);
-
-    // Ступени: от земли к крыльцу
-    const stepCount = 8;
-    const stepDepth = 0.35;
-    const stepHeight = 0.15;
-    const stepsFarZ = porchCenterZ - porchDepth / 2 - stepDepth / 2 - (stepCount - 1) * stepDepth;
-    for (let i = 0; i < stepCount; i++) {
-      const stepZ = stepsFarZ + i * stepDepth;
-      const stepY = stepHeight / 2 + i * stepHeight;
-      addBox(porchWidth - 0.4, stepHeight, stepDepth, 0, stepY, stepZ, porchMaterial);
-    }
-
-    // Поручни крыльца
-    const railingMaterial = new THREE.MeshLambertMaterial({ color: 0x909090 });
-    addBox(porchWidth, 0.08, 0.08, 0, porchPlatformY + 0.5, porchCenterZ + porchDepth / 2 - 0.1, railingMaterial);
-    addBox(0.08, 0.5, porchDepth, -porchWidth / 2 + 0.04, porchPlatformY + 0.3, porchCenterZ, railingMaterial);
-    addBox(0.08, 0.5, porchDepth, porchWidth / 2 - 0.04, porchPlatformY + 0.3, porchCenterZ, railingMaterial);
-
-    // Козырёк над крыльцом
-    const canopyZ = porchCenterZ;
-    addBox(porchWidth + 0.6, 0.12, porchDepth + 0.4, 0, height - 0.6, canopyZ, roofMaterial);
-
-    // Столбы козырька
-    const postGeometry = new THREE.CylinderGeometry(0.1, 0.12, height - 1.2, 8);
-    const postMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF });
-    for (const postX of [-porchWidth / 2 + 0.2, porchWidth / 2 - 0.2]) {
-      const post = new THREE.Mesh(postGeometry, postMat);
-      post.position.set(postX, (height - 1.2) / 2 + 0.3, canopyZ);
-      post.castShadow = true;
-      storeGroup.add(post);
-    }
-
-    // Дверь на крыльце
-    addBox(1.4, 2.3, 0.12, 0, porchPlatformY + 1.15, frontZ - 0.2, doorMaterial);
-
-    storeGroup.rotation.y = rotation;
-    storeGroup.position.set(position.x, 0, position.z);
-    this.scene.add(storeGroup);
-
-    if (this.assetDebugMode && debugMeta) {
-      this.registerDebugAsset(debugMeta.id, debugMeta.label, storeGroup);
-    }
-  }
-
-  private createFloorWindows(
-    houseGroup: THREE.Group, 
-    floorY: number, 
-    entrances: number, 
-    entranceWidth: number, 
-    houseDepth: number, 
-    panesPerWindow: number = 2
-  ): void {
-    // Окна на передней стороне
-    for (let entrance = 0; entrance < entrances; entrance++) {
-      const entranceX = (entrance - (entrances - 1) / 2) * entranceWidth;
-
-      // По 2 окна на подъезд (симметрично по бокам от центра подъезда)
-      for (let windowIndex = 0; windowIndex < 2; windowIndex++) {
-        const windowOffsetX = (windowIndex === 0 ? -2.5 : 2.5);
-        const window = new Window(panesPerWindow);
-        window.setPosition(
-          entranceX + windowOffsetX, 
-          floorY, 
-          -houseDepth / 2
-        );
-        houseGroup.add(window.getGroup());
-      }
-    }
-
-    // Окна на задней стороне
-    for (let entrance = 0; entrance < entrances; entrance++) {
-      const entranceX = (entrance - (entrances - 1) / 2) * entranceWidth;
-
-      // По 2 окна на подъезд (симметрично по бокам от центра подъезда)
-      for (let windowIndex = 0; windowIndex < 2; windowIndex++) {
-        const windowOffsetX = (windowIndex === 0 ? -2.5 : 2.5);
-        const window = new Window(panesPerWindow);
-
-        window.setPosition(
-          entranceX + windowOffsetX,
-          floorY,
-          houseDepth / 2
-        );
-
-        houseGroup.add(window.getGroup());
-      }
-    }
-  }
-
-  private createPanelHouse(
-    floors: number,
-    entrances: number,
-    position: { x: number, z: number } = { x: 0, z: 0 },
-    rotation: number = 0,
-    debugMeta?: { id: string; label: string }
-  ): void {
-    const houseGroup = new THREE.Group();
-    if (debugMeta) {
-      houseGroup.name = debugMeta.id;
-    }
-
-    // Параметры дома
-    const floorHeight = 3; // Высота одного этажа
-    const entranceWidth = 22; // Ширина одного подъезда
-    const houseDepth = 12; // Глубина дома
-    const totalHeight = floors * floorHeight;
-    const totalWidth = entrances * entranceWidth;
-    
-    // Основная структура дома - панельные блоки
-    const panelMaterial = new THREE.MeshLambertMaterial({ color: 0xE0E0E0 }); // Светло-серый цвет панелей
-    
-    // Создаем этажи (относительно центра группы)
-    for (let floor = 0; floor < floors; floor++) {
-      const floorY = floor * floorHeight + floorHeight / 2;
-      
-      // Основной блок этажа
-      const floorGeometry = new THREE.BoxGeometry(totalWidth, floorHeight, houseDepth);
-      const floorMesh = new THREE.Mesh(floorGeometry, panelMaterial);
-      floorMesh.position.set(0, floorY, 0); // Центр группы
-      floorMesh.castShadow = true;
-      floorMesh.receiveShadow = true;
-      houseGroup.add(floorMesh);
-      
-      // Окна на каждом этаже для каждого подъезда (передняя и задняя стороны)
-      this.createFloorWindows(houseGroup, floorY, entrances, entranceWidth, houseDepth, 2);
-    }
-    
-    // Подъезды с дверями и углублениями (только на первом этаже)
-    for (let entrance = 0; entrance < entrances; entrance++) {
-      const entranceX = (entrance - (entrances - 1) / 2) * entranceWidth;
-      
-      // Дверь подъезда
-      const doorGeometry = new THREE.BoxGeometry(1.2, 2.2, 0.2);
-      const doorMaterial = new THREE.MeshLambertMaterial({ color: 0x4a2c1a }); // Темно-коричневая дверь
-      const door = new THREE.Mesh(doorGeometry, doorMaterial);
-      door.position.set(entranceX, 1.1, -houseDepth / 2 );
-      door.castShadow = true;
-      houseGroup.add(door);
-      
-      // Козырек над подъездом
-      const canopyGeometry = new THREE.BoxGeometry(2, 0.3, 1.5);
-      const canopyMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
-      const canopy = new THREE.Mesh(canopyGeometry, canopyMaterial);
-      canopy.position.set(entranceX, floorHeight + 0.15, -houseDepth / 2 + 0.75);
-      canopy.castShadow = true;
-      houseGroup.add(canopy);
-    }
-    
-    // Балконы на каждом этаже (кроме первого) - передняя сторона
-    for (let floor = 1; floor < floors; floor++) {
-      const floorY = floor * floorHeight;
-      
-      for (let entrance = 0; entrance < entrances; entrance++) {
-        const entranceX = (entrance - (entrances - 1) / 2) * entranceWidth;
-        
-        // Платформа балкона
-        const balconyPlatformGeometry = new THREE.BoxGeometry(1.8, 0.2, 1.2);
-        const balconyPlatformMaterial = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 });
-        const balconyPlatform = new THREE.Mesh(balconyPlatformGeometry, balconyPlatformMaterial);
-        balconyPlatform.position.set(entranceX, floorY, -houseDepth / 2 - 0.6);
-        balconyPlatform.castShadow = true;
-        balconyPlatform.receiveShadow = true;
-        houseGroup.add(balconyPlatform);
-        
-        // Ограждение балкона
-        const railingGeometry = new THREE.BoxGeometry(1.8, 0.8, 0.1);
-        const railingMaterial = new THREE.MeshLambertMaterial({ color: 0x808080 });
-        const railing = new THREE.Mesh(railingGeometry, railingMaterial);
-        railing.position.set(entranceX, floorY + 0.5, -houseDepth / 2 - 1.15);
-        railing.castShadow = true;
-        houseGroup.add(railing);
-      }
-    }
-    
-    // Балконы на каждом этаже (кроме первого) - задняя сторона
-    for (let floor = 1; floor < floors; floor++) {
-      const floorY = floor * floorHeight;
-      
-      for (let entrance = 0; entrance < entrances; entrance++) {
-        const entranceX = (entrance - (entrances - 1) / 2) * entranceWidth;
-        
-        // Платформа балкона
-        const balconyPlatformGeometry = new THREE.BoxGeometry(1.8, 0.2, 1.2);
-        const balconyPlatformMaterial = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 });
-        const balconyPlatform = new THREE.Mesh(balconyPlatformGeometry, balconyPlatformMaterial);
-        balconyPlatform.position.set(entranceX, floorY, houseDepth / 2 + 0.6);
-        balconyPlatform.castShadow = true;
-        balconyPlatform.receiveShadow = true;
-        houseGroup.add(balconyPlatform);
-        
-        // Ограждение балкона
-        const railingGeometry = new THREE.BoxGeometry(1.8, 0.8, 0.1);
-        const railingMaterial = new THREE.MeshLambertMaterial({ color: 0x808080 });
-        const railing = new THREE.Mesh(railingGeometry, railingMaterial);
-        railing.position.set(entranceX, floorY + 0.5, houseDepth / 2 + 1.15);
-        railing.castShadow = true;
-        houseGroup.add(railing);
-      }
-    }
-    
-    // Крыша
-    const roofGeometry = new THREE.BoxGeometry(totalWidth + 1, 0.5, houseDepth + 1);
-    const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x696969 }); // Темно-серый
-    const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-    roof.position.set(0, totalHeight + 0.25, 0); // Центр группы
-    roof.castShadow = true;
-    roof.receiveShadow = true;
-    houseGroup.add(roof);
-    
-    // Поворот дома на 90 градусов вокруг своей оси
-    houseGroup.rotation.y = rotation;
-    
-    // Перемещение группы в нужное место после поворота
-    houseGroup.position.set(position.x, 0, position.z);
-
-    this.scene.add(houseGroup);
-
-    if (this.assetDebugMode && debugMeta) {
-      this.registerDebugAsset(debugMeta.id, debugMeta.label, houseGroup);
-    }
-  }
-
-  private createSingleVeranda(x: number, z: number): THREE.Group {
-    const verandaGroup = new THREE.Group();
-    
-    // Крыша веранды - увеличена высота позиции
-    const roofGeometry = new THREE.BoxGeometry(8.5, 0.3, 6.5);
-    const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 }); // Темно-коричневая крыша
-    const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-    roof.position.set(x, 3.2, z);
-    roof.castShadow = true;
-    verandaGroup.add(roof);
-    
-    // Опорные столбы веранды - увеличена высота с 2.2 до 2.8
-    for (let i = 0; i < 4; i++) {
-      const postGeometry = new THREE.CylinderGeometry(0.15, 0.15, 2.8);
-      const postMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
-      const post = new THREE.Mesh(postGeometry, postMaterial);
-      const postX = (i % 2) * 7 + (x - 3.5);
-      const postZ = Math.floor(i / 2) * 5.5 + (z - 2.75);
-      post.position.set(postX, 1.4, postZ);
-      post.castShadow = true;
-      verandaGroup.add(post);
-    }
-    
-    // Бетонные стены веранды (3 стены) - увеличена высота с 2 до 2.5
-    const wallMaterial = new THREE.MeshLambertMaterial({ color: 0xD3D3D3 }); // Светло-серый бетон
-    
-    // Задняя стена
-    const backWallGeometry = new THREE.BoxGeometry(8, 2.5, 0.2);
-    const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
-    backWall.position.set(x, 1.25, z + 3);
-    backWall.castShadow = true;
-    backWall.receiveShadow = true;
-    verandaGroup.add(backWall);
-    
-    // Левая стена
-    const leftWallGeometry = new THREE.BoxGeometry(0.2, 2.5, 6);
-    const leftWall = new THREE.Mesh(leftWallGeometry, wallMaterial);
-    leftWall.position.set(x - 4, 1.25, z);
-    leftWall.castShadow = true;
-    leftWall.receiveShadow = true;
-    verandaGroup.add(leftWall);
-    
-    // Правая стена
-    const rightWallGeometry = new THREE.BoxGeometry(0.2, 2.5, 6);
-    const rightWall = new THREE.Mesh(rightWallGeometry, wallMaterial);
-    rightWall.position.set(x + 4, 1.25, z);
-    rightWall.castShadow = true;
-    rightWall.receiveShadow = true;
-    verandaGroup.add(rightWall);
-    
-    return verandaGroup;
-  }
-
-  private createVerandas(): void {
-    // Первая веранда (ближе к забору)
-    const veranda1 = this.createSingleVeranda(-7, -15);
-    this.scene.add(veranda1);
-    
-    // Вторая веранда (ближе к детскому саду)
-    const veranda2 = this.createSingleVeranda(10, -15);
-    this.scene.add(veranda2);
-  }
-
-  private createSinglePipe(x: number, z: number): THREE.Mesh {
-    const pipeGeometry = new THREE.CylinderGeometry(0.3, 0.3, 8, 16);
-    const pipeMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 }); // Коричневый цвет
-    const pipe = new THREE.Mesh(pipeGeometry, pipeMaterial);
-    pipe.position.set(x, 0.3, z); // На полу (y = 0.3 - радиус трубы)
-    pipe.rotation.z = Math.PI / 2; // Горизонтально
-    pipe.castShadow = true;
-    pipe.receiveShadow = true;
-    return pipe;
-  }
-
-  private createPipes(): void {
-    const pipe1 = this.createSinglePipe(0, -5);
-    this.scene.add(pipe1);
-    
-    const pipe2 = this.createSinglePipe(0, -5.5);
-    this.scene.add(pipe2);
-  }
-
-  private createSideTrees(): void {
-    // Создаем деревья вдоль забора с обеих сторон
-    const treePositions = [];
-    
-    // Левая сторона забора (отрицательные X координаты)
-    for (let i = 0; i < 8; i++) {
-      const x = -35 + (i * 4.5); // Распределяем деревья вдоль левой стороны с большим интервалом
-      const z = -8 + (Math.random() - 0.5) * 2; // Небольшое случайное смещение по Z
-      treePositions.push({ x, z, side: 'left' });
-    }
-    
-    // Правая сторона забора (положительные X координаты)
-    for (let i = 0; i < 8; i++) {
-      const x = 35 - (i * 4.5); // Распределяем деревья вдоль правой стороны с большим интервалом
-      const z = -8 + (Math.random() - 0.5) * 2; // Небольшое случайное смещение по Z
-      treePositions.push({ x, z, side: 'right' });
-    }
-    
-    // Создаем деревья в каждой позиции
-    treePositions.forEach((pos) => {
-      const treeGroup = new THREE.Group();
-      
-      // Случайные размеры для разнообразия
-      const trunkHeight = 3 + Math.random() * 2; // Высота ствола от 3 до 5
-      const trunkRadius = 0.2 + Math.random() * 0.2; // Радиус ствола от 0.2 до 0.4
-      const crownRadius = 1.5 + Math.random() * 1; // Радиус кроны от 1.5 до 2.5
-      
-      // Ствол
-      const trunkGeometry = new THREE.CylinderGeometry(trunkRadius, trunkRadius * 1.2, trunkHeight, 8);
-      const trunkMaterial = new THREE.MeshLambertMaterial({ 
-        color: new THREE.Color().setHSL(0.1, 0.6, 0.3 + Math.random() * 0.2) // Разные оттенки коричневого
-      });
-      const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-      trunk.position.y = trunkHeight / 2;
-      trunk.castShadow = true;
-      treeGroup.add(trunk);
-      
-      // Крона
-      const crownGeometry = new THREE.SphereGeometry(crownRadius, 8, 6);
-      const crownMaterial = new THREE.MeshLambertMaterial({ 
-        color: new THREE.Color().setHSL(0.3, 0.7, 0.3 + Math.random() * 0.3) // Разные оттенки зеленого
-      });
-      const crown = new THREE.Mesh(crownGeometry, crownMaterial);
-      crown.position.y = trunkHeight + crownRadius * 0.7;
-      crown.castShadow = true;
-      treeGroup.add(crown);
-      
-      // Небольшое случайное вращение для естественности
-      treeGroup.rotation.y = Math.random() * 0.2 - 0.1;
-      
-      // Размещаем дерево
-      treeGroup.position.set(pos.x, 0, pos.z);
-      this.scene.add(treeGroup);
-    });
-  }
-  
   public addCharacter(character: CharacterInterface): void {
     this.characters.push(character);
     if (character.nameLabel) {
@@ -797,6 +244,36 @@ export class SceneManager implements SceneManagerInterface {
     
     // Обновление контроллера камеры
     this.cameraController.update(deltaTime);
+
+    const dtSec = Math.min(deltaTime, 100) / 1000;
+    this.timeOfDay.update(dtSec);
+
+    // Анимация декора (машины, качели, облака) и статистов
+    this.decor?.update(deltaTime);
+    this.npcs?.update(deltaTime);
+    this.interaction?.update(dtSec);
+
+    // Солнце, луна и ночной свет следуют за точкой интереса, чтобы тени оставались чёткими
+    const focus = this.cameraController.getTarget();
+    // Привязываем центр теней к сетке текселей В ПРОСТРАНСТВЕ СВЕТА — иначе края теней «ползут» при движении камеры
+    const sunDir = this.timeOfDay.sunDir;
+    const texel = (this.sunLight.shadow.camera.right - this.sunLight.shadow.camera.left) / this.sunLight.shadow.mapSize.x;
+    this.shadowRight.crossVectors(this.worldUp, sunDir).normalize();
+    this.shadowUp.crossVectors(sunDir, this.shadowRight);
+    const sx = Math.round((focus.x * this.shadowRight.x + focus.z * this.shadowRight.z) / texel) * texel;
+    const sy = Math.round((focus.x * this.shadowUp.x + focus.z * this.shadowUp.z) / texel) * texel;
+    const sd = focus.x * sunDir.x + focus.z * sunDir.z;
+    this.shadowCenter.set(0, 0, 0)
+      .addScaledVector(this.shadowRight, sx)
+      .addScaledVector(this.shadowUp, sy)
+      .addScaledVector(sunDir, sd);
+    const fx = this.shadowCenter.x;
+    const fz = this.shadowCenter.z;
+    this.sunLight.target.position.copy(this.shadowCenter);
+    this.sunLight.position.copy(this.shadowCenter).addScaledVector(sunDir, 90);
+    this.moonLight.target.position.set(fx, 0, fz);
+    this.moonLight.position.set(fx, 0, fz).addScaledVector(this.timeOfDay.moonDir, 90);
+    this.stageLight.position.set(focus.x, 4.5, focus.z);
   }
   
   public render(): void {
@@ -811,6 +288,18 @@ export class SceneManager implements SceneManagerInterface {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
   
+  public getCameraController(): CameraController {
+    return this.cameraController;
+  }
+
+  public getTimeOfDay(): TimeOfDay {
+    return this.timeOfDay;
+  }
+
+  public getInteraction(): SceneInteraction | null {
+    return this.interaction;
+  }
+
   public getScene(): THREE.Scene {
     return this.scene;
   }
@@ -829,6 +318,8 @@ export class SceneManager implements SceneManagerInterface {
   
   public dispose(): void {
     this.assetDebugPanel?.dispose();
+    this.interaction?.dispose();
+    this.npcs?.dispose();
 
     // Очистка персонажей
     this.characters.forEach(character => {
@@ -842,13 +333,9 @@ export class SceneManager implements SceneManagerInterface {
     this.scene.traverse((object) => {
       if (object instanceof THREE.Mesh) {
         if (object.geometry) object.geometry.dispose();
-        if (object.material) {
-          if (Array.isArray(object.material)) {
-            object.material.forEach(material => material.dispose());
-          } else {
-            object.material.dispose();
-          }
-        }
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        // Общие материалы (окна) живут дольше сцены и пересоздаваться не должны
+        materials.forEach(material => { if (material && !material.userData.shared) material.dispose(); });
       }
     });
     

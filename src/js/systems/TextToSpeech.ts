@@ -17,7 +17,7 @@ export class TextToSpeech implements TTSInterface {
     onError?: (error: TTSErrorType) => void
   ): void {
     if (!this.isSupported) {
-      console.log('Text-to-Speech не поддерживается');
+      console.warn('Text-to-Speech не поддерживается');
       if (onError) onError('not_supported');
       return;
     }
@@ -32,19 +32,17 @@ export class TextToSpeech implements TTSInterface {
     utterance.volume = 0.8;
     
     utterance.onstart = () => {
-      console.log('Начало воспроизведения речи');
       this.isSpeaking = true;
       if (onStart) onStart();
     };
     
     utterance.onend = () => {
-      console.log('Конец воспроизведения речи');
       this.isSpeaking = false;
       if (onEnd) onEnd();
     };
     
     utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
-      console.log('Ошибка воспроизведения речи:', event.error);
+      console.error('Ошибка воспроизведения речи:', event.error);
       this.isSpeaking = false;
       
       // Преобразование ошибки в наш тип

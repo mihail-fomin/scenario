@@ -1,10 +1,29 @@
 import * as THREE from 'three';
 
 // Типы персонажей
+export type Emotion = 'neutral' | 'happy' | 'angry' | 'surprised' | 'sad' | 'curious';
+
+export type HairStyle = 'bald-m' | 'short' | 'cap' | 'scarf' | 'long' | 'none';
+
+export interface CharacterAppearance {
+  skin?: number;
+  shirt?: number;
+  pants?: number;
+  shoes?: number;
+  hair?: HairStyle;
+  hairColor?: number;
+  hatColor?: number;
+  /** общий масштаб (дети < 1) */
+  scale?: number;
+}
+
 export interface CharacterData {
   name: string;
   color: number;
   position: [number, number, number];
+  appearance?: CharacterAppearance;
+  /** статист: без имени над головой, не участвует в диалогах */
+  npc?: boolean;
 }
 
 // Типы диалогов
@@ -34,6 +53,17 @@ export interface CharacterInterface {
   stopSpeaking(): void;
   update(deltaTime: number): void;
   dispose(): void;
+  walkTo(x: number, z: number, speed?: number): void;
+  teleportTo(x: number, z: number): void;
+  isMoving(): boolean;
+  faceTowards(x: number, z: number): void;
+  lookAtCharacter(other: CharacterInterface | null): void;
+  setEmotion(emotion: Emotion, durationSec?: number): void;
+  wave(durationSec?: number): void;
+  jump(): void;
+  setSitting(sitting: boolean): void;
+  getHeadPosition(out: THREE.Vector3): THREE.Vector3;
+  getFacingAngle(): number;
 }
 
 // Типы UI элементов

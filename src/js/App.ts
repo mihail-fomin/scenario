@@ -5,20 +5,21 @@ import { TextToSpeech } from './systems/TextToSpeech.js';
 import { SceneManager } from './systems/SceneManager.js';
 import { UIManager } from './ui/UIManager.js';
 import { CHARACTER_DATA } from './utils/constants.js';
-import { armyDialogueSet } from './data/armyDialogue.js';
-import { tikhonCharacterDialogueSet } from './data/tikhonCharacterDialogue.js';
-import { brokenLegDialogueSet } from './data/brokenLegDialogue.js';
-import { hairProblemDialogueSet } from './data/hairProblemDialogue.js';
-import { oreoChocolateDialogueSet } from './data/oreoChocolateDialogue.js';
-import { grishaShitDialogueSet } from './data/grishaShitDialogue.js';
-import { grishaTwinsDialogueSet } from './data/grishaTwinsDialogue.js';
-import { policeStationDialogueSet } from './data/policeStationDialogue.js';
+import { ALL_DIALOGUE_SETS } from './data/index.js';
 import { isAssetDebugMode } from './utils/assetDebug.js';
+import { StageManager } from './systems/StageManager.js';
+import { CameraDirector } from './systems/CameraDirector.js';
+import { AmbientAudio } from './systems/AmbientAudio.js';
+import { TimeControl } from './ui/TimeControl.js';
+import { LOCATIONS, getLocationForDialogue } from './data/stages.js';
+import { detectEmotion, reactionTo } from './utils/emotion.js';
 
-import { Dialogue, CharacterInterface, DialogueSystemInterface, TTSInterface, SceneManagerInterface, UIManagerInterface, DialogueSet, DialogueSetManagerInterface } from '@/types/index';
+import { Dialogue, CharacterInterface, DialogueSystemInterface, TTSInterface, SceneManagerInterface, UIManagerInterface, DialogueSetManagerInterface } from '@/types/index';
+
+const wait = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 export class App {
-  private sceneManager: SceneManagerInterface;
+  private sceneManager: SceneManager;
   private uiManager: UIManagerInterface;
   private tts: TTSInterface;
   private dialogueSetManager: DialogueSetManagerInterface;
@@ -27,7 +28,12 @@ export class App {
   private isRunning: boolean = false;
   private lastTime: number = 0;
   private assetDebugMode: boolean = false;
-  
+  private stage: StageManager | null = null;
+  private director: CameraDirector | null = null;
+  private audio = new AmbientAudio();
+  private timeControl: TimeControl | null = null;
+  private startToken = 0;
+
   constructor() {
     this.assetDebugMode = isAssetDebugMode();
     this.sceneManager = new SceneManager();
@@ -47,6 +53,7 @@ export class App {
     }
 
     this.createCharacters();
+    this.setupStageAndCamera();
     this.setupDialogueSets();
     this.setupDialogueSystem();
     this.setupUI();
@@ -69,24 +76,18 @@ export class App {
     });
   }
 
+  private setupStageAndCamera(): void {
+    this.stage = new StageManager(this.characters);
+    void this.stage.goTo(LOCATIONS.yard, true);
+    this.director = new CameraDirector(this.sceneManager.getCameraController(), this.characters, this.stage);
+    this.timeControl = new TimeControl(this.sceneManager.getTimeOfDay(), this.audio);
+  }
+
   private setupDialogueSets(): void {
-    // Создаем несколько наборов диалогов
-    const dialogueSet1: DialogueSet = brokenLegDialogueSet;
-
-    const dialogueSet2: DialogueSet = hairProblemDialogueSet;
-
-    // Добавляем наборы диалогов
-    this.dialogueSetManager.addDialogueSet(dialogueSet1);
-    this.dialogueSetManager.addDialogueSet(dialogueSet2);
-    this.dialogueSetManager.addDialogueSet(armyDialogueSet);
-    this.dialogueSetManager.addDialogueSet(tikhonCharacterDialogueSet);
-    this.dialogueSetManager.addDialogueSet(oreoChocolateDialogueSet);
-    this.dialogueSetManager.addDialogueSet(grishaShitDialogueSet);
-    this.dialogueSetManager.addDialogueSet(grishaTwinsDialogueSet);
-    this.dialogueSetManager.addDialogueSet(policeStationDialogueSet);
+    ALL_DIALOGUE_SETS.forEach(set => this.dialogueSetManager.addDialogueSet(set));
 
     // Устанавливаем первый набор как текущий
-    this.dialogueSetManager.setCurrentDialogueSet('dialogue1');
+    this.dialogueSetManager.setCurrentDialogueSet(ALL_DIALOGUE_SETS[0].id);
   }
   
   private setupDialogueSystem(): void {
@@ -126,15 +127,28 @@ export class App {
   private onDialogueChange(dialogue: Dialogue, character: CharacterInterface): void {
     // Обновление UI
     this.uiManager.showSubtitles(dialogue.text, character.name);
+
+    // Настроение реплики: лицо говорящего, реакции слушателей, выбор плана камерой
+    const emotion = detectEmotion(dialogue.text);
+    const listeners = this.characters.filter(c => c !== character);
+    character.setEmotion(emotion, Math.max(1.5, dialogue.text.length * 0.07));
+    character.lookAtCharacter(listeners[Math.floor(Math.random() * listeners.length)] ?? null);
+    listeners.forEach(l => {
+      l.lookAtCharacter(character);
+      const reaction = reactionTo(emotion);
+      if (reaction !== 'neutral') {
+        // слушатели реагируют с небольшой задержкой, а не все разом
+        setTimeout(() => l.setEmotion(reaction, 1.6 + Math.random()), 400 + Math.random() * 900);
+      }
+    });
+    this.director?.onLine(character, dialogue.text, emotion);
     
     // Воспроизведение речи
     this.tts.speak(
       dialogue.text,
+      undefined,
       () => {
-        console.log('Начало речи персонажа:', character.name);
-      },
-      () => {
-        console.log('Конец речи персонажа:', character.name);
+        this.director?.onLineEnd();
         // Автоматический переход к следующей реплике через 500мс
         setTimeout(() => {
           if (this.dialogueSystem?.getIsPlaying()) {
@@ -168,6 +182,11 @@ export class App {
   private endDialogue(): void {
     this.tts.stop();
     this.uiManager.hideSubtitles();
+    this.director?.onLineEnd();
+    this.characters.forEach(c => {
+      c.lookAtCharacter(null);
+      c.setEmotion('neutral');
+    });
   }
 
   private changeDialogueSet(dialogueSetId: string): void {
@@ -189,14 +208,38 @@ export class App {
     }
   }
 
-  private startDialogueFromCard(dialogueSetId: string): void {
+  private async startDialogueFromCard(dialogueSetId: string): Promise<void> {
     // Сначала меняем набор диалогов
     this.changeDialogueSet(dialogueSetId);
-    
-    // Затем автоматически запускаем диалог
-    setTimeout(() => {
-      this.startDialogue();
-    }, 100); // Небольшая задержка для корректной инициализации
+    const token = ++this.startToken;
+
+    const location = getLocationForDialogue(dialogueSetId);
+    if (this.stage && this.director) {
+      const needWalk = location.id !== this.stage.getLocation().id;
+
+      if (this.timeControl?.isAutoByStory()) {
+        this.sceneManager.getTimeOfDay().transitionTo(location.hour, needWalk ? 5 : 3);
+      }
+
+      if (needWalk) {
+        // Компания идёт на место, камера сопровождает
+        this.uiManager.showSubtitles(`📍 ${location.label}`);
+        this.director.followWalk();
+        await this.stage.goTo(location);
+        if (token !== this.startToken) return;
+        this.uiManager.hideSubtitles();
+        this.director.establish(2.4);
+        await wait(1800);
+      } else {
+        this.director.reset();
+        await wait(300);
+      }
+      if (token !== this.startToken) return;
+    } else {
+      await wait(100);
+    }
+
+    this.startDialogue();
   }
   
   public start(): void {
@@ -218,6 +261,13 @@ export class App {
     const deltaTime = currentTime - this.lastTime;
     this.lastTime = currentTime;
     
+    const dtSec = Math.min(deltaTime, 100) / 1000;
+
+    // Сначала режиссёр выбирает кадр, потом сцена (и камера) обновляются
+    this.stage?.update();
+    this.director?.update(dtSec);
+    this.audio.update(dtSec, this.sceneManager.getTimeOfDay().getState(), this.sceneManager.getCamera().position);
+
     // Обновление сцены
     this.sceneManager.update(deltaTime);
     
